@@ -1,6 +1,6 @@
 {
   "name": "@devhelpr/expression-compiler",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "publishConfig": {
     "access": "public"
   },
@@ -12,12 +12,6 @@
   "repository": "https://www.github.com/devhelpr/expression-compiler",
   "author": "Maikel van de Lisdonk",
   "license": "MIT",
-  "main": "./dist/expression-compiler/index.js",
-  "types": "./dist/expression-compiler/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./index.mjs",
-      "require": "./index.js"
-    }
-  }
+  "main": "dist/expression-compiler/index.js",
+  "types": "dist/expression-compiler/index.d.ts"
 }

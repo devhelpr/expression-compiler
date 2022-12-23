@@ -27,6 +27,6 @@ yarn nx build @devhelpr/expression-compiler
 for now .. manually copy dist directory to expression-compiler folder (until we figured out how to do this correctly using package json and vite/tsconfig settings)
 
 cd expression-compiler
-... manually increase version
+... manually increase version or .. npm version ...
 npm publish --access public
 (login to npm first.. "npm login")
