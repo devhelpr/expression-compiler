@@ -6,7 +6,7 @@ import {
 
 export function App() {
   const compiledExpression = CompileExpression(`
-  a+b+2`);
+  a+b.x.y.abc+2`);
   /*
 
   let x : integer = 1;
@@ -19,7 +19,7 @@ export function App() {
   */
   const result = RunExpression(
     compiledExpression as unknown as (payload: any) => any,
-    { a: 2, b: 3 }
+    { a: 2, b: { x: { y: { abc: 10 } } } }
   );
   console.log('result', result);
   return (

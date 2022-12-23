@@ -9,13 +9,14 @@ export class Compiler {
 
   public compile = (ast: any, values?: any, pluginRegistry?: any) => {
     this.mainProgram(ast);
-    console.log('codeScript', this.codeScript);
+    //console.log('codeScript', this.codeScript);
     return new Function('payload', `${this.codeScript}`) as unknown as (
       payload?: any
     ) => any;
   };
 
   mainProgram = (astNode: any) => {
+    //console.log('astNode', astNode);
     if (astNode && astNode.body && astNode.type === 'Program') {
       if (astNode.body.length === 1) {
         this.codeScript += 'return ';
@@ -277,6 +278,40 @@ export class Compiler {
 
   binaryExpression = (expressionNode: any, valType: string) => {
     switch (expressionNode.type) {
+      case 'MemberExpression': {
+        console.log('MemberExpression', expressionNode);
+        if (
+          expressionNode.object &&
+          expressionNode.object.type === 'MemberExpression'
+        ) {
+          this.binaryExpression(expressionNode.object, valType);
+          if (
+            expressionNode.property &&
+            expressionNode.property.type === 'Identifier'
+          ) {
+            this.codeScript += `.${expressionNode.property.name}`;
+          } else {
+            throw new Error(
+              `Unsupported property "${expressionNode.property.type}" in MemberExpression`
+            );
+          }
+        } else if (
+          expressionNode.object &&
+          expressionNode.object.type === 'Identifier'
+        ) {
+          if (
+            expressionNode.property &&
+            expressionNode.property.type === 'Identifier'
+          ) {
+            this.codeScript += `payload.${expressionNode.object.name}.${expressionNode.property.name}`;
+          } else {
+            throw new Error(
+              `Unsupported property "${expressionNode.property.type}" in MemberExpression`
+            );
+          }
+        }
+        break;
+      }
       case 'LogicalExpression':
         this.expression(expressionNode, valType);
         break;
