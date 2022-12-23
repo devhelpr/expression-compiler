@@ -6,7 +6,7 @@
   },
   "description": "expression to javascript compiler",
   "files": [
-    "dist",
+    "dist/expression-compiler",
     "package.json"
   ],
   "repository": "https://www.github.com/devhelpr/expression-compiler",

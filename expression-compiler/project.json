@@ -1,5 +1,5 @@
 {
-  "name": "expression-compiler",
+  "name": "@devhelpr/expression-compiler",
   "$schema": "../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "expression-compiler/src",
   "projectType": "library",
