@@ -5,8 +5,13 @@ import {
 } from '@expression-compiler/expression-compiler';
 
 export function App() {
-  const compiledExpression = CompileExpression('a + b');
+  const compiledExpression = CompileExpression(`
+  a+b+2`);
   /*
+
+  let x : integer = 1;
+  x
+
     a + b 
 
     payload.a + payload.b
@@ -16,10 +21,11 @@ export function App() {
     compiledExpression as unknown as (payload: any) => any,
     { a: 2, b: 3 }
   );
+  console.log('result', result);
   return (
     <div>
       <h1>Expression compiler!</h1>
-      <p>Result: {result.toString()}</p>
+      <p>Result: {(result || 0).toString()}</p>
       <pre>{JSON.stringify(result, null, 2)}</pre>
     </div>
   );

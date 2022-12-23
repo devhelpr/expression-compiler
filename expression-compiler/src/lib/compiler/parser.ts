@@ -271,16 +271,16 @@ export class Parser {
       // see VariableStatement
 
       let variableType = '';
-      if (this._lookahead.type in ['integer']) {
+      if (this._lookahead.type === 'integer') {
         this._eat(this._lookahead.type);
         variableType = 'integer';
-      } else if (this._lookahead.type in ['float']) {
+      } else if (this._lookahead.type === 'float') {
         this._eat(this._lookahead.type);
         variableType = 'float';
-      } else if (this._lookahead.type in ['string']) {
+      } else if (this._lookahead.type === 'string') {
         this._eat(this._lookahead.type);
         variableType = 'string';
-      } else if (this._lookahead.type in ['boolean']) {
+      } else if (this._lookahead.type === 'boolean') {
         this._eat(this._lookahead.type);
         variableType = 'boolean';
       }

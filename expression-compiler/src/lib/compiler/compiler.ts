@@ -9,13 +9,17 @@ export class Compiler {
 
   public compile = (ast: any, values?: any, pluginRegistry?: any) => {
     this.mainProgram(ast);
-    return new Function('payload', `return ${this.codeScript}`) as unknown as (
+    console.log('codeScript', this.codeScript);
+    return new Function('payload', `${this.codeScript}`) as unknown as (
       payload?: any
     ) => any;
   };
 
   mainProgram = (astNode: any) => {
     if (astNode && astNode.body && astNode.type === 'Program') {
+      if (astNode.body.length === 1) {
+        this.codeScript += 'return ';
+      }
       astNode.body.forEach((statementNode: any) => {
         this.statement(statementNode, true);
       });
@@ -40,6 +44,9 @@ export class Compiler {
           break;
         case 'ConstantStatement':
           this.constantStatement(statementNode);
+          break;
+        case 'ReturnStatement':
+          this.returnStatement(statementNode);
           break;
       }
     }
@@ -141,15 +148,17 @@ export class Compiler {
               }
             }
 
-            this.binaryExpression(expression.right, valType);
             if (this.localVarablesList.indexOf(expression.left.name) >= 0) {
               const variableIndex = this.localVarablesList.indexOf(
                 expression.left.name
               );
               if (variableIndex >= 0) {
-                this.codeScript += `local_${variableIndex} = ${expression.left.name};`;
+                this.codeScript += `local_${variableIndex} = `;
               }
             }
+
+            this.binaryExpression(expression.right, valType);
+            this.codeScript += ';';
           }
         } else if (expression.operator === '+=') {
           if (expression.left && expression.left.type === 'Identifier') {
@@ -360,6 +369,17 @@ export class Compiler {
           }
         }
       });
+    }
+  };
+
+  returnStatement = (returnStatementNode: any) => {
+    if (returnStatementNode.argument) {
+      this.codeScript += `return `;
+      this.binaryExpression(
+        returnStatementNode.argument,
+        this.getTypeFromNode(returnStatementNode.argument)
+      );
+      this.codeScript += `;`;
     }
   };
 }
