@@ -22,6 +22,8 @@ Visit the [Nx Documentation](https://nx.dev) to learn more.
 
 ## Publishing
 
+yarn nx build @devhelpr/expression-compiler
 cd expression-compiler
+... manually increase version
 npm publish
 (login to npm first.. "npm login")

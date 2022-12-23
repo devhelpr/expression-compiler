@@ -1,12 +1,12 @@
 {
   "name": "@devhelpr/expression-compiler",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publishConfig": {
     "access": "public"
   },
   "description": "expression to javascript compiler",
   "files": [
-    "dist/expression-compiler",
+    "../dist/expression-compiler",
     "package.json"
   ],
   "repository": "https://www.github.com/devhelpr/expression-compiler",
