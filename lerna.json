@@ -1,0 +1,12 @@
+{
+  "packages": ["expression-compiler/*", "src/*"],
+  "useNx": true,
+  "version": "independent",
+  "npmClient": "npm",
+  "useWorkspaces": true,
+  "command": {
+    "publish": {
+      "npmClient": "npm"
+    }
+  }
+}

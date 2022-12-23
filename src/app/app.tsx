@@ -2,7 +2,7 @@
 import {
   CompileExpression,
   RunExpression,
-} from '@expression-compiler/expression-compiler';
+} from '@devhelpr/expression-compiler';
 
 export function App() {
   const compiledExpression = CompileExpression(`

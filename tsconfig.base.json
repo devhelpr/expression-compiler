@@ -15,9 +15,7 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@expression-compiler/expression-compiler": [
-        "expression-compiler/src/index.ts"
-      ]
+      "@devhelpr/expression-compiler": ["expression-compiler/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]

@@ -5,7 +5,8 @@
   "scripts": {
     "start": "nx serve",
     "build": "nx build",
-    "test": "nx test"
+    "test": "nx test",
+    "versionandpublishpackages": "lerna publish --no-private"
   },
   "private": true,
   "dependencies": {
@@ -43,7 +44,7 @@
     "vite-plugin-dts": "~1.7.1",
     "vite-plugin-eslint": "^1.6.0",
     "vite-tsconfig-paths": "^4.0.1",
-    "vitest": "^0.25.1"
+    "vitest": "^0.25.1",
+    "lerna": "^6.1.0"
   }
 }
-
