@@ -1,6 +1,6 @@
 {
   "name": "@devhelpr/expression-compiler",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "publishConfig": {
     "access": "public"
   },
@@ -13,5 +13,11 @@
   "author": "Maikel van de Lisdonk",
   "license": "MIT",
   "main": "dist/expression-compiler/index.js",
-  "types": "dist/expression-compiler/index.d.ts"
+  "types": "dist/expression-compiler/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "dist/expression-compiler/index.mjs",
+      "require": "dist/expression-compiler/index.js"
+    }
+  }
 }
