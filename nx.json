@@ -19,6 +19,7 @@
       "inputs": ["production", "^production"]
     },
     "test": {
+      "dependsOn": ["build"],
       "inputs": ["default", "^production"]
     },
     "lint": {

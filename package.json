@@ -5,8 +5,7 @@
   "scripts": {
     "start": "nx serve",
     "build": "nx build",
-    "test": "nx test",
-    "versionandpublishpackages": "lerna publish --no-private"
+    "test": "nx test"
   },
   "private": true,
   "dependencies": {

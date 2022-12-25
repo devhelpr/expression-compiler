@@ -1,7 +1,7 @@
 import { Compiler } from './compiler/compiler';
 import { Parser } from './compiler/parser';
 
-export function CompileExpression(expression: string) {
+export function compileExpression(expression: string) {
   const parser = new Parser();
 
   const ast = parser.parse(expression);
@@ -9,11 +9,11 @@ export function CompileExpression(expression: string) {
   return compiler.compile(ast);
 }
 
-export function RunExpression(
+export function runExpression(
   compiledExpression: (payload?: any) => any,
   payload: unknown
 ) {
   return compiledExpression(payload);
 }
 
-export default CompileExpression;
+export default compileExpression;

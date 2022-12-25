@@ -1,13 +1,44 @@
 import { Body } from './constants';
 import { Tokenizer } from './tokenizer';
 
-export interface IIdentifier {
+export type VariableType = 'integer' | 'float' | 'string' | 'boolean' | 'array';
+
+export interface IASTNode {
   type: string;
+}
+
+export interface IASTIdentifierNode extends IASTNode {
   name: string;
 }
 
+export interface IASTReturnNode extends IASTNode {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  argument: any;
+}
+
+export interface IASTValueNode extends IASTNode {
+  value: number;
+  hasDecimals: boolean;
+}
+
+export interface IASTConstantNode extends IASTNode {
+  id: IASTIdentifierNode;
+  value: IASTValueNode;
+}
+
+export interface IASTFunctionNode extends IASTNode {
+  name: IASTNode;
+  params: IFunctionParameter[];
+  body: IASTTree;
+  functionType: VariableType;
+}
+export interface IASTTree {
+  type: string;
+  body: IASTNode[];
+}
+
 export interface IFunctionParameter {
-  identifier: IIdentifier;
+  identifier: IASTIdentifierNode;
   parameterType: string;
 }
 
@@ -23,7 +54,7 @@ export class Parser {
     this._tokenizer = new Tokenizer();
   }
 
-  parse = (expression: string) => {
+  parse = (expression: string): IASTTree | boolean => {
     this._string = expression;
     this._isEndOfCode = false;
 
@@ -36,7 +67,7 @@ export class Parser {
     return false;
   };
 
-  Program = () => {
+  Program = (): IASTTree => {
     return {
       type: 'Program',
       body: this.StatementList(),
@@ -73,7 +104,8 @@ export class Parser {
 
       case 'constant':
         return this.ConstantStatement();
-
+      case 'if':
+        return this.IfStatement();
       case 'while':
       case 'do':
       case 'for':
@@ -83,8 +115,8 @@ export class Parser {
     }
   };
 
-  FunctionDeclaration = () => {
-    let functionReturnType = '';
+  FunctionDeclaration = (): IASTFunctionNode => {
+    let functionReturnType: VariableType = 'float';
     this._eat('function');
     const name = this.Identifier();
     //this._currentFunction = name.name;
@@ -130,7 +162,7 @@ export class Parser {
     const params: IFunctionParameter[] = [];
     do {
       const identifier = this.Identifier();
-      let valType = '';
+      let valType: VariableType = 'float';
       if (this._lookahead.type === ':') {
         this._eat(':');
         if (this._lookahead.type === 'integer') {
@@ -157,7 +189,7 @@ export class Parser {
     return params;
   };
 
-  ReturnStatement = () => {
+  ReturnStatement = (): IASTReturnNode => {
     if (this._lookahead.type === 'return') {
       this._eat('return');
     }
@@ -170,7 +202,7 @@ export class Parser {
     };
   };
 
-  ConstantStatement = () => {
+  ConstantStatement = (): IASTConstantNode => {
     this._eat('constant');
     const id = this.Identifier();
     this._eat('SIMPLE_ASSIGN');
@@ -597,7 +629,7 @@ export class Parser {
       this._lookahead != null &&
       (this._lookahead.type === '.' || this._lookahead.type === '[')
     ) {
-      if (this._lookahead.type === '.') {
+      if (this._lookahead != null && this._lookahead.type === '.') {
         this._eat('.');
         const property = this.Identifier();
         object = {
@@ -608,7 +640,7 @@ export class Parser {
         };
       }
 
-      if (this._lookahead.type === '[') {
+      if (this._lookahead != null && this._lookahead.type === '[') {
         this._eat('[');
         const property = this.Expression();
         this._eat(']');

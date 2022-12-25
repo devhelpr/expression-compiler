@@ -1,4 +1,4 @@
-import { Identifier } from './constants';
+import { Body, Identifier } from './constants';
 
 export class Compiler {
   private constantDefinitions: any = {};
@@ -7,21 +7,30 @@ export class Compiler {
 
   private codeScript = '';
 
+  private functionList: string[] = [];
+  private functionCode: any[] = [];
+  private functionReturnValtype = 'float';
+
+  public currentFunction = '';
+
   public compile = (ast: any, values?: any, pluginRegistry?: any) => {
     this.mainProgram(ast);
-    //console.log('codeScript', this.codeScript);
+    console.log('codeScript', this.codeScript);
     return new Function('payload', `${this.codeScript}`) as unknown as (
       payload?: any
     ) => any;
   };
 
   mainProgram = (astNode: any) => {
-    //console.log('astNode', astNode);
+    console.log('astNode', astNode);
     if (astNode && astNode.body && astNode.type === 'Program') {
-      if (astNode.body.length === 1) {
-        this.codeScript += 'return ';
-      }
-      astNode.body.forEach((statementNode: any) => {
+      astNode.body.forEach((statementNode: any, index: number) => {
+        if (
+          index === astNode.body.length - 1 &&
+          statementNode.type === 'ExpressionStatement'
+        ) {
+          this.codeScript += 'return ';
+        }
         this.statement(statementNode, true);
       });
     }
@@ -49,6 +58,15 @@ export class Compiler {
         case 'ReturnStatement':
           this.returnStatement(statementNode);
           break;
+        case 'IfStatement':
+          this.ifStatement(statementNode);
+          break;
+        case 'WhileStatement':
+          this.whileStatement(statementNode);
+          break;
+        case 'FunctionDeclaration':
+          this.functionDeclaration(statementNode);
+          break;
       }
     }
   };
@@ -69,7 +87,6 @@ export class Compiler {
   };
 
   private getTypeFromNode = (node: any): string => {
-    console.log('getTypeFromNode nodeName', node);
     if (node.type === Identifier) {
       if (this.localVarablesList.indexOf(node.name) >= 0) {
         const variableIndex = this.localVarablesList.indexOf(node.name);
@@ -113,6 +130,9 @@ export class Compiler {
 
   expression = (expression: any, valType: string) => {
     switch (expression.type) {
+      case 'BooleanLiteral':
+        this.codeScript += `${expression.value ? 'true' : 'false'}`;
+        break;
       case 'NumberLiteral':
         this.codeScript += `${expression.value}`;
         break;
@@ -272,44 +292,55 @@ export class Compiler {
 
         break;
       }
+      case 'MemberExpression': {
+        this.memberExpression(expression);
+        break;
+      }
+      case 'CallExpression': {
+        this.callExpression(expression);
+        break;
+      }
     }
     return true;
+  };
+
+  memberExpression = (expressionNode: any) => {
+    if (
+      expressionNode.object &&
+      expressionNode.object.type === 'MemberExpression'
+    ) {
+      this.binaryExpression(expressionNode.object, 'float');
+      if (
+        expressionNode.property &&
+        expressionNode.property.type === 'Identifier'
+      ) {
+        this.codeScript += `.${expressionNode.property.name}`;
+      } else {
+        throw new Error(
+          `Unsupported property "${expressionNode.property.type}" in MemberExpression`
+        );
+      }
+    } else if (
+      expressionNode.object &&
+      expressionNode.object.type === 'Identifier'
+    ) {
+      if (
+        expressionNode.property &&
+        expressionNode.property.type === 'Identifier'
+      ) {
+        this.codeScript += `payload.${expressionNode.object.name}.${expressionNode.property.name}`;
+      } else {
+        throw new Error(
+          `Unsupported property "${expressionNode.property.type}" in MemberExpression`
+        );
+      }
+    }
   };
 
   binaryExpression = (expressionNode: any, valType: string) => {
     switch (expressionNode.type) {
       case 'MemberExpression': {
-        console.log('MemberExpression', expressionNode);
-        if (
-          expressionNode.object &&
-          expressionNode.object.type === 'MemberExpression'
-        ) {
-          this.binaryExpression(expressionNode.object, valType);
-          if (
-            expressionNode.property &&
-            expressionNode.property.type === 'Identifier'
-          ) {
-            this.codeScript += `.${expressionNode.property.name}`;
-          } else {
-            throw new Error(
-              `Unsupported property "${expressionNode.property.type}" in MemberExpression`
-            );
-          }
-        } else if (
-          expressionNode.object &&
-          expressionNode.object.type === 'Identifier'
-        ) {
-          if (
-            expressionNode.property &&
-            expressionNode.property.type === 'Identifier'
-          ) {
-            this.codeScript += `payload.${expressionNode.object.name}.${expressionNode.property.name}`;
-          } else {
-            throw new Error(
-              `Unsupported property "${expressionNode.property.type}" in MemberExpression`
-            );
-          }
-        }
+        this.memberExpression(expressionNode);
         break;
       }
       case 'LogicalExpression':
@@ -410,11 +441,212 @@ export class Compiler {
   returnStatement = (returnStatementNode: any) => {
     if (returnStatementNode.argument) {
       this.codeScript += `return `;
-      this.binaryExpression(
+      this.expression(
         returnStatementNode.argument,
         this.getTypeFromNode(returnStatementNode.argument)
       );
       this.codeScript += `;`;
     }
+  };
+
+  ifStatement = (ifStatementNode: any) => {
+    /*
+			test .. BinaryExpression
+			consequent : BlockStatement..
+			alternate : BlockStatement
+		*/
+    if (ifStatementNode.test && ifStatementNode.consequent) {
+      const test = ifStatementNode.test;
+      const valType = this.getTypeFromLeftHandSide(test);
+
+      const consequent = ifStatementNode.consequent;
+      this.codeScript += `if (`;
+      if (
+        test.type === 'BinaryExpression' ||
+        test.type === 'LogicalExpression'
+      ) {
+        this.expression(test, valType);
+      } else {
+        this.codeScript += `true`;
+      }
+      this.codeScript += `) {`;
+
+      if (consequent) {
+        this.statement(consequent);
+      }
+
+      this.codeScript += `}`;
+
+      if (ifStatementNode.alternate) {
+        this.codeScript += ` else {`;
+        this.statement(ifStatementNode.alternate);
+        this.codeScript += `}`;
+      }
+    }
+  };
+
+  whileStatement = (whileStatementNode: any) => {
+    /*
+			test
+			body
+		*/
+    if (
+      whileStatementNode.test &&
+      whileStatementNode.body &&
+      whileStatementNode.body.body
+    ) {
+      const test = whileStatementNode.test;
+
+      if (whileStatementNode.body.body.length > 0) {
+        // Prevent infinite loops
+        //
+        // only allow simple while loops :
+        //   while (loop < ...) {
+        //     loop = loop + 1;
+        //   }
+        //
+        //   Additional increading of variable which is currently allowed:
+        //     loop += 1;
+
+        let hasAssignmentExpressionWithVariableFromTest = false;
+        const testVariableName = test.left.name;
+        whileStatementNode.body.body.forEach((statement: any) => {
+          if (statement.type === 'ExpressionStatement') {
+            if (
+              statement.expression &&
+              statement.expression.type === 'AssignmentExpression'
+            ) {
+              if (
+                statement.expression.left.name === testVariableName &&
+                (statement.expression.operator === '=' ||
+                  statement.expression.operator === '+=')
+              ) {
+                hasAssignmentExpressionWithVariableFromTest = true;
+              }
+            }
+          }
+        });
+
+        if (!hasAssignmentExpressionWithVariableFromTest) {
+          throw new Error(`While expression found without valid body`);
+        }
+
+        /*let testCondition : any = 1;
+        
+        testCondition = interpretateExpression(test);
+
+        while (testCondition == 1) {
+          result = interpretateStatement(whileStatementNode.body);
+          if (test.type === "BinaryExpression") {
+            testCondition = interpretateExpression(test);
+          } else {
+            break;
+          }
+        }*/
+
+        this.codeScript += `while (`;
+        this.expression(test, 'float');
+        this.codeScript += `) {`;
+        this.statement(whileStatementNode.body);
+        this.codeScript += `}`;
+      }
+    }
+  };
+
+  functionDeclaration = (functionDeclarationNode: any) => {
+    if (
+      functionDeclarationNode.name &&
+      functionDeclarationNode.name.type !== 'Identifier'
+    ) {
+      throw new Error(
+        `Unknown function name type "${functionDeclarationNode.name.type}"`
+      );
+    }
+
+    const storeCode = this.codeScript;
+    const storeLocalVariables = [...this.localVarablesList];
+    const storeLocalVarablesTypeList = [...this.localVarablesTypeList];
+
+    this.codeScript = `function ${functionDeclarationNode.name.name} (`;
+
+    this.localVarablesList = [];
+    this.localVarablesTypeList = [];
+    this.functionList.push(functionDeclarationNode.name.name);
+    this.currentFunction = functionDeclarationNode.name.name;
+
+    functionDeclarationNode.params.forEach((param: any) => {
+      if (param.identifier.type === 'Identifier') {
+        this.localVarablesList.push(param.identifier.name);
+        this.localVarablesTypeList.push(param.parameterType);
+      } else {
+        throw new Error(
+          `Unknown parameter type "${param.identifier.type}" in "${functionDeclarationNode.name.name}"`
+        );
+      }
+    });
+    this.codeScript += `){`;
+    this.blockStatement(functionDeclarationNode.body);
+
+    this.codeScript += `};`;
+
+    this.functionCode.push({
+      name: functionDeclarationNode.name.name,
+      code: this.codeScript,
+      paramCount: functionDeclarationNode.params.length,
+      params: [...functionDeclarationNode.params],
+      localVarablesList: [...this.localVarablesList],
+      localVarablesTypeList: [...this.localVarablesTypeList],
+      valType: this.functionReturnValtype,
+    });
+
+    this.codeScript = storeCode;
+
+    this.codeScript += this.functionCode[this.functionCode.length - 1].code;
+
+    this.localVarablesList = storeLocalVariables;
+    this.localVarablesTypeList = storeLocalVarablesTypeList;
+
+    this.currentFunction = Body;
+  };
+
+  callExpression = (expressionNode: any) => {
+    const functionDeclaration = this.functionCode.filter((declaration) => {
+      return declaration.name === expressionNode.callee.name;
+    });
+
+    if (functionDeclaration.length > 0) {
+      if (
+        expressionNode.arguments.length !== functionDeclaration[0].paramCount
+      ) {
+        throw new Error(
+          `Function ${functionDeclaration[0].name} expected ${functionDeclaration[0].paramCount} parameters but ${expressionNode.arguments.length} given`
+        );
+      }
+    }
+
+    this.codeScript += `${expressionNode.callee.name}(`;
+
+    expressionNode.arguments.forEach(
+      (argumentExpression: any, index: number) => {
+        let paramType = 'float';
+
+        if (functionDeclaration.length > 0) {
+          if (index < functionDeclaration[0].localVarablesTypeList.length) {
+            paramType = functionDeclaration[0].localVarablesTypeList[index];
+          }
+        }
+        this.binaryExpression(argumentExpression, paramType);
+      }
+    );
+
+    const functionIndex = this.functionList.indexOf(expressionNode.callee.name);
+
+    if (functionIndex < 0) {
+      throw new Error(`function ${expressionNode.callee.name} not found`);
+    }
+
+    this.codeScript += `);`;
+
+    return true;
   };
 }
