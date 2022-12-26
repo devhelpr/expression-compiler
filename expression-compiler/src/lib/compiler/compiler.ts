@@ -392,6 +392,9 @@ export class Compiler {
       case 'NumberLiteral':
         this.codeScript += `${expressionNode.value | 0}`;
         break;
+      case 'StringLiteral':
+        this.codeScript += `"${expressionNode.value || ''}"`;
+        break;
       case 'Identifier':
         if (expressionNode.name) {
           if (this.constantDefinitions[expressionNode.name] !== undefined) {
@@ -661,6 +664,9 @@ export class Compiler {
           }
         }
         this.binaryExpression(argumentExpression, paramType);
+        if (index < expressionNode.arguments.length - 1) {
+          this.codeScript += `,`;
+        }
       }
     );
 

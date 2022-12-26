@@ -6,14 +6,14 @@ import {
 } from '@devhelpr/expression-compiler';
 
 export function App() {
-  registerCustomFunction('customFunction', [], () => {
-    console.log('customFunction called');
+  registerCustomFunction('customFunction', [], (a, b, c) => {
+    console.log('customFunction called', a, b, c);
   });
 
   const compiledExpression = compileExpression(`
 
   let loop=0;
-  customFunction();
+  customFunction(2,3,'test');
   if (!loop) {
     loop = loop + 5;
   }
