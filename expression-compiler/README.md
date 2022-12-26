@@ -60,6 +60,17 @@ const result = runExpression(compiledExpression, {
 });
 ```
 
+## Example with calling custom function
+
+```
+registerCustomFunction('customFunction', [], () => {
+    console.log("custom function called!")
+});
+
+const compiledExpression = compileExpression('customFunction();');
+runExpression(compiledExpression, {});
+```
+
 ## Development
 
 Run tests:
