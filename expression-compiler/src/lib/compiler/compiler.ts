@@ -157,6 +157,9 @@ export class Compiler {
       case 'NumberLiteral':
         this.codeScript += `${expression.value}`;
         break;
+      case 'StringLiteral':
+        this.codeScript += `"${expression.value || ''}"`;
+        break;
       case 'Identifier':
         if (expression.name) {
           if (this.constantDefinitions[expression.name] !== undefined) {
@@ -389,6 +392,9 @@ export class Compiler {
           );
         }
         break;
+      case 'BooleanLiteral':
+        this.codeScript += `${expressionNode.value ? 'true' : 'false'}`;
+        break;
       case 'NumberLiteral':
         this.codeScript += `${expressionNode.value | 0}`;
         break;
@@ -430,8 +436,27 @@ export class Compiler {
           ) {
             if (
               variableDeclaration.init &&
+              variableDeclaration.init.type === 'StringLiteral'
+            ) {
+              //if (variableNode.variableType === 'string') {
+              this.localVarablesTypeList.push('string');
+              this.localVarablesList.push(variableDeclaration.id.name);
+
+              this.codeScript += `let local_${
+                this.localVarablesList.length - 1
+              } = "${variableDeclaration.init.value || ''}";`;
+              //}
+            } else if (
+              variableDeclaration.init &&
               variableDeclaration.init.type === 'NumberLiteral'
             ) {
+              this.localVarablesTypeList.push('integer');
+              this.localVarablesList.push(variableDeclaration.id.name);
+
+              this.codeScript += `let local_${
+                this.localVarablesList.length - 1
+              } = ${variableDeclaration.init.value | 0};`;
+              /*  
               if (variableNode.variableType === 'integer') {
                 this.localVarablesTypeList.push('integer');
                 this.localVarablesList.push(variableDeclaration.id.name);
@@ -453,6 +478,7 @@ export class Compiler {
                   this.localVarablesList.length - 1
                 } = ${variableDeclaration.init.value | 0};`;
               }
+              */
             } else {
               throw new Error('Variable initializer can only be a number.');
             }

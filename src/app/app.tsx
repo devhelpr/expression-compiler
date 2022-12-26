@@ -13,11 +13,12 @@ export function App() {
   const compiledExpression = compileExpression(`
 
   let loop=0;
+  let test = "test";
   customFunction(2,3,'test');
-  if (!loop) {
+  if (test == "test") {
     loop = loop + 5;
   }
-  loop  + 2;
+  loop;
   
   `);
 
