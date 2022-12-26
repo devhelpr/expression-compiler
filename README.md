@@ -1,7 +1,7 @@
 # ExpressionCompiler
 
 Expression/script to javascript compiler.
-See [a relative link](expression-compiler/README.md) for more info
+See [readme for expression-compiler npm package](expression-compiler/README.md) for more info
 
 ## Publishing
 
