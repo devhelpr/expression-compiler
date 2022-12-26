@@ -14,8 +14,9 @@ export function App() {
 
   let loop=0;
   let test = "test";
+  let test2 = "hello";
   customFunction(2,3,'test');
-  if (test == "test") {
+  if (test == "test" && test2 == "hello") {
     loop = loop + 5;
   }
   loop;

@@ -294,7 +294,6 @@ export class Compiler {
         break;
       case 'LogicalExpression': {
         this.binaryExpression(expression.left, valType);
-        this.binaryExpression(expression.right, valType);
 
         let useValType = 'float';
         const outputType =
@@ -304,13 +303,15 @@ export class Compiler {
         }
 
         if (expression.operator === '&&' || expression.operator === 'and') {
-          this.codeScript += `${expression.left.name} && ${expression.right.name}`;
+          this.codeScript += ` && `;
         } else if (
           expression.operator === '||' ||
           expression.operator === 'or'
         ) {
-          this.codeScript += `${expression.left.name} || ${expression.right.name}`;
+          this.codeScript += ` || `;
         }
+
+        this.binaryExpression(expression.right, valType);
 
         // TODO : xor .. shl .. shr .. rot etc..
 
