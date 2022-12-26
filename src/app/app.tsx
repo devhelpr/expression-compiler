@@ -1,13 +1,19 @@
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import {
   compileExpression,
+  registerCustomFunction,
   runExpression,
 } from '@devhelpr/expression-compiler';
 
 export function App() {
+  registerCustomFunction('customFunction', [], () => {
+    console.log('customFunction called');
+  });
+
   const compiledExpression = compileExpression(`
 
   let loop=0;
+  customFunction();
   if (!loop) {
     loop = loop + 5;
   }

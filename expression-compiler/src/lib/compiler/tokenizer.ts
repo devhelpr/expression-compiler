@@ -25,6 +25,7 @@ const Specifcation: any[] = [
   [/^\binteger\b/, 'integer'],
   [/^\blongint\b/, 'longint'],
   [/^\bfloat\b/, 'float'],
+  [/^\range\b/, 'range_type'],
   [/^\bstring\b/, 'string_type'],
   [/^if\b/, 'if'],
   [/^\belse\b/, 'else'],
@@ -46,6 +47,7 @@ const Specifcation: any[] = [
   [/^\d+\.?\d*/, 'NUMBER'],
 
   // identifiers
+  [/^\w+:\d+/, 'RANGEIDENTIFIER'],
   [/^\w+/, 'IDENTIFIER'],
 
   // Eqauality operator == !=

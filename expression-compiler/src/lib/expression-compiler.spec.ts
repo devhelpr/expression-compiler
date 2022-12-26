@@ -1,4 +1,8 @@
-import { compileExpression, runExpression } from './expression-compiler';
+import {
+  compileExpression,
+  registerCustomFunction,
+  runExpression,
+} from './expression-compiler';
 
 describe('ExpressionCompiler', () => {
   it('should return true', () => {
@@ -29,5 +33,16 @@ describe('ExpressionCompiler', () => {
     );
     const result = runExpression(compiledExpression, {});
     expect(result).toBe(42);
+  });
+
+  it('should custom function be called', () => {
+    const mock = vi.fn();
+    registerCustomFunction('customFunction', [], () => {
+      mock();
+    });
+
+    const compiledExpression = compileExpression('customFunction();');
+    runExpression(compiledExpression, {});
+    expect(mock).toBeCalled();
   });
 });

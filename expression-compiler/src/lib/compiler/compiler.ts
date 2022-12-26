@@ -1,3 +1,8 @@
+import { IASTTree } from '../interfaces/ast';
+import {
+  CustomFunctionRegistry,
+  ICustomFunction,
+} from '../interfaces/custom-functions';
 import { Body, Identifier } from './constants';
 
 export class Compiler {
@@ -11,17 +16,33 @@ export class Compiler {
   private functionCode: any[] = [];
   private functionReturnValtype = 'float';
 
+  private customFunctions: CustomFunctionRegistry = {};
   public currentFunction = '';
 
-  public compile = (ast: any, values?: any, pluginRegistry?: any) => {
+  public compile = (ast: IASTTree, values?: any) => {
+    const customBindings: any = {};
+    Object.keys(this.customFunctions).forEach((key) => {
+      const customFunction: ICustomFunction = this.customFunctions[key];
+      customBindings[customFunction.functionName] =
+        customFunction.customFunction;
+    });
+
     this.mainProgram(ast);
     console.log('codeScript', this.codeScript);
-    return new Function('payload', `${this.codeScript}`) as unknown as (
-      payload?: any
-    ) => any;
+    return (
+      new Function('payload', `${this.codeScript}`) as unknown as (
+        payload?: any
+      ) => any
+    ).bind(customBindings);
   };
 
-  mainProgram = (astNode: any) => {
+  public setCustomFunctionRegistry = (
+    customFunctions: CustomFunctionRegistry
+  ) => {
+    this.customFunctions = customFunctions;
+  };
+
+  mainProgram = (astNode: IASTTree) => {
     console.log('astNode', astNode);
     if (astNode && astNode.body && astNode.type === 'Program') {
       astNode.body.forEach((statementNode: any, index: number) => {
@@ -624,8 +645,12 @@ export class Compiler {
       }
     }
 
-    this.codeScript += `${expressionNode.callee.name}(`;
-
+    const customFunction = this.customFunctions[expressionNode.callee.name];
+    if (customFunction) {
+      this.codeScript += `this.${expressionNode.callee.name}(`;
+    } else {
+      this.codeScript += `${expressionNode.callee.name}(`;
+    }
     expressionNode.arguments.forEach(
       (argumentExpression: any, index: number) => {
         let paramType = 'float';
@@ -641,7 +666,7 @@ export class Compiler {
 
     const functionIndex = this.functionList.indexOf(expressionNode.callee.name);
 
-    if (functionIndex < 0) {
+    if (functionIndex < 0 && expressionNode.callee.name !== 'customFunction') {
       throw new Error(`function ${expressionNode.callee.name} not found`);
     }
 

@@ -1,46 +1,13 @@
+import {
+  IASTConstantNode,
+  IASTFunctionNode,
+  IASTReturnNode,
+  IASTTree,
+  IFunctionParameter,
+} from '../interfaces/ast';
+import { VariableType } from '../interfaces/variable-type';
 import { Body } from './constants';
 import { Tokenizer } from './tokenizer';
-
-export type VariableType = 'integer' | 'float' | 'string' | 'boolean' | 'array';
-
-export interface IASTNode {
-  type: string;
-}
-
-export interface IASTIdentifierNode extends IASTNode {
-  name: string;
-}
-
-export interface IASTReturnNode extends IASTNode {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  argument: any;
-}
-
-export interface IASTValueNode extends IASTNode {
-  value: number;
-  hasDecimals: boolean;
-}
-
-export interface IASTConstantNode extends IASTNode {
-  id: IASTIdentifierNode;
-  value: IASTValueNode;
-}
-
-export interface IASTFunctionNode extends IASTNode {
-  name: IASTNode;
-  params: IFunctionParameter[];
-  body: IASTTree;
-  functionType: VariableType;
-}
-export interface IASTTree {
-  type: string;
-  body: IASTNode[];
-}
-
-export interface IFunctionParameter {
-  identifier: IASTIdentifierNode;
-  parameterType: string;
-}
 
 export class Parser {
   _string = '';
@@ -133,9 +100,12 @@ export class Parser {
       } else if (this._lookahead.type === 'float') {
         this._eat('float');
         functionReturnType = 'float';
-      } else if (this._lookahead.type === 'string') {
-        this._eat('string');
+      } else if (this._lookahead.type === 'string_type') {
+        this._eat('string_type');
         functionReturnType = 'string';
+      } else if (this._lookahead.type === 'range_type') {
+        this._eat('range_type');
+        functionReturnType = 'range';
       } else if (this._lookahead.type === 'boolean') {
         this._eat('boolean');
         functionReturnType = 'boolean';
@@ -171,9 +141,12 @@ export class Parser {
         } else if (this._lookahead.type === 'float') {
           this._eat('float');
           valType = 'float';
-        } else if (this._lookahead.type === 'string') {
-          this._eat('string');
+        } else if (this._lookahead.type === 'string_type') {
+          this._eat('string_type');
           valType = 'string';
+        } else if (this._lookahead.type === 'range_type') {
+          this._eat('range_type');
+          valType = 'range';
         } else if (this._lookahead.type === 'boolean') {
           this._eat('boolean');
           valType = 'boolean';
@@ -309,12 +282,15 @@ export class Parser {
       } else if (this._lookahead.type === 'float') {
         this._eat(this._lookahead.type);
         variableType = 'float';
-      } else if (this._lookahead.type === 'string') {
+      } else if (this._lookahead.type === 'string_type') {
         this._eat(this._lookahead.type);
         variableType = 'string';
       } else if (this._lookahead.type === 'boolean') {
         this._eat(this._lookahead.type);
         variableType = 'boolean';
+      } else if (this._lookahead.type === 'range_type') {
+        this._eat(this._lookahead.type);
+        variableType = 'range';
       }
 
       if (this._lookahead.type === '=') {
