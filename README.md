@@ -7,9 +7,9 @@ See [readme for expression-compiler npm package](expression-compiler/README.md) 
 
 yarn nx build @devhelpr/expression-compiler
 
+... manually increase version or .. npm version ...
 
 cd dist/expression-compiler
-... manually increase version or .. npm version ...
 npm publish --access public
 (login to npm first.. "npm login")
 
