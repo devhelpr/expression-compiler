@@ -28,7 +28,7 @@ export class Compiler {
     });
 
     this.mainProgram(ast);
-    console.log('codeScript', this.codeScript);
+    //console.log('codeScript', this.codeScript);
     return (
       new Function('payload', `${this.codeScript}`) as unknown as (
         payload?: any
@@ -43,7 +43,7 @@ export class Compiler {
   };
 
   mainProgram = (astNode: IASTTree) => {
-    console.log('astNode', astNode);
+    //console.log('astNode', astNode);
     if (astNode && astNode.body && astNode.type === 'Program') {
       astNode.body.forEach((statementNode: any, index: number) => {
         if (
@@ -151,6 +151,9 @@ export class Compiler {
 
   expression = (expression: any, valType: string) => {
     switch (expression.type) {
+      case 'RangeLiteral':
+        this.codeScript += `"${expression.value || ''}"`;
+        break;
       case 'BooleanLiteral':
         this.codeScript += `${expression.value ? 'true' : 'false'}`;
         break;
@@ -392,6 +395,9 @@ export class Compiler {
             `UnaryExpression "${expressionNode.operator}" cannot be handled`
           );
         }
+        break;
+      case 'RangeLiteral':
+        this.codeScript += `"${expressionNode.value || ''}"`;
         break;
       case 'BooleanLiteral':
         this.codeScript += `${expressionNode.value ? 'true' : 'false'}`;

@@ -6,6 +6,8 @@ const Specifcation: any[] = [
   [/^\/\/.*/, null],
   [/^\/\*[\s\S]*?\*\//, null],
 
+  [/^\w+\d+:\w+\d+/, 'RANGE'],
+
   // symbols , delimiters
   [/^;/, ';'],
   [/^:/, ':'],
@@ -47,7 +49,6 @@ const Specifcation: any[] = [
   [/^\d+\.?\d*/, 'NUMBER'],
 
   // identifiers
-  [/^\w+:\d+/, 'RANGEIDENTIFIER'],
   [/^\w+/, 'IDENTIFIER'],
 
   // Eqauality operator == !=

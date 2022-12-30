@@ -45,4 +45,38 @@ describe('ExpressionCompiler', () => {
     runExpression(compiledExpression, {});
     expect(mock).toBeCalled();
   });
+
+  it('should custom function be called with parameters', () => {
+    const mock = vi.fn();
+    registerCustomFunction('customFunction', [], (a: number, b: number) => {
+      mock(a, b);
+    });
+
+    const compiledExpression = compileExpression('customFunction(1, 2);');
+    runExpression(compiledExpression, {});
+    expect(mock).toBeCalledWith(1, 2);
+  });
+
+  it('should return a string', () => {
+    const compiledExpression = compileExpression('"Hello World"');
+    const result = runExpression(compiledExpression, {});
+    expect(result).toBe('Hello World');
+  });
+
+  it('should return a string with a variable', () => {
+    const compiledExpression = compileExpression('"Hello " + name');
+    const result = runExpression(compiledExpression, { name: 'World' });
+    expect(result).toBe('Hello World');
+  });
+
+  it('should return a string with a range', () => {
+    const mock = vi.fn();
+    registerCustomFunction('customFunction', [], (range: string) => {
+      mock(range);
+    });
+
+    const compiledExpression = compileExpression('customFunction(A1:B2);');
+    runExpression(compiledExpression, {});
+    expect(mock).toBeCalledWith('A1:B2');
+  });
 });

@@ -10,19 +10,17 @@ export function App() {
     console.log('customFunction called', a, b, c);
   });
 
-  const compiledExpression = compileExpression(`
+  const compiledExpression = compileExpression(`customFunction(A1:B1,A2,3)`);
 
-  let loop=0;
+  /*let loop=0;
   let test = "test";
   let test2 = "hello";
-  customFunction(2,3,'test');
+  customFunction(2,3, 5 );
   if (test == "test" && test2 == "hello") {
     loop = loop + 5;
   }
   loop;
-  
-  `);
-
+  */
   //   function test() {
   //     return 2;
   //   }

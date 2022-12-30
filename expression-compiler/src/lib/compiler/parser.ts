@@ -144,8 +144,8 @@ export class Parser {
         } else if (this._lookahead.type === 'string_type') {
           this._eat('string_type');
           valType = 'string';
-        } else if (this._lookahead.type === 'range_type') {
-          this._eat('range_type');
+        } else if (this._lookahead.type === 'range') {
+          this._eat('range');
           valType = 'range';
         } else if (this._lookahead.type === 'boolean') {
           this._eat('boolean');
@@ -574,7 +574,7 @@ export class Parser {
       arguments: this.Arguments(),
     };
 
-    if (this._lookahead.type === '(') {
+    if (this._lookahead !== null && this._lookahead.type === '(') {
       callExpression = this._CallExpression(callExpression);
     }
 
@@ -586,7 +586,6 @@ export class Parser {
 
     const argumentList =
       this._lookahead.type !== ')' ? this.ArgumentList() : [];
-
     this._eat(')');
     return argumentList;
   };
@@ -594,8 +593,9 @@ export class Parser {
   ArgumentList = () => {
     const argumentList: any[] = [];
     do {
-      argumentList.push(this.AssignmentExpression());
-    } while (this._lookahead.type === ',' && this._eat(','));
+      const expression = this.Expression();
+      argumentList.push(expression);
+    } while (this._lookahead?.type === ',' && this._eat(','));
     return argumentList;
   };
 
@@ -653,6 +653,7 @@ export class Parser {
       tokenType === 'HEXNUMBER' ||
       tokenType === 'NUMBER' ||
       tokenType === 'STRING' ||
+      tokenType === 'RANGE' ||
       tokenType === 'true' ||
       tokenType === 'false' ||
       tokenType === 'null'
@@ -668,6 +669,8 @@ export class Parser {
 
   Literal = () => {
     switch (this._lookahead.type) {
+      case 'RANGE':
+        return this.RangeLiteral();
       case 'HEXNUMBER':
         return this.HexNumberLiteral();
       case 'NUMBER':
@@ -716,6 +719,14 @@ export class Parser {
       type: 'NumberLiteral',
       value: Number(token.value),
       hasDecimals: token.value.indexOf('.') >= 0,
+    };
+  };
+
+  RangeLiteral = () => {
+    const token = this._eat('RANGE');
+    return {
+      type: 'RangeLiteral',
+      value: token.value,
     };
   };
 
