@@ -7,9 +7,13 @@ See [readme for expression-compiler npm package](expression-compiler/README.md) 
 
 yarn nx build @devhelpr/expression-compiler
 
-for now .. manually copy dist directory to expression-compiler folder (until we figured out how to do this correctly using package json and vite/tsconfig settings)
 
-cd expression-compiler
+cd dist/expression-compiler
 ... manually increase version or .. npm version ...
 npm publish --access public
 (login to npm first.. "npm login")
+
+
+## new publishable library
+
+ npx nx g @nrwl/react:library exprcomp --publishable --importPath @devhelpr/exprcomp
