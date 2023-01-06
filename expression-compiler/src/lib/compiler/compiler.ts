@@ -367,6 +367,10 @@ export class Compiler {
         this.memberExpression(expressionNode);
         break;
       }
+      case 'CallExpression': {
+        this.callExpression(expressionNode);
+        break;
+      }
       case 'LogicalExpression':
         this.expression(expressionNode, valType);
         break;
@@ -701,7 +705,7 @@ export class Compiler {
 
     const functionIndex = this.functionList.indexOf(expressionNode.callee.name);
 
-    if (functionIndex < 0 && expressionNode.callee.name !== 'customFunction') {
+    if (functionIndex < 0 && !customFunction) {
       throw new Error(`function ${expressionNode.callee.name} not found`);
     }
 

@@ -2,7 +2,6 @@
 import {
   compileExpression,
   compileExpressionAsScriptNode,
-  deleteExpressionSceiptNode,
   deleteExpressionScriptNode,
   ICompiledScriptExpression,
   registerCustomFunction,
@@ -14,6 +13,11 @@ registerCustomFunction('customFunction', [], (a, b, c) => {
   console.log('customFunction called', a, b, c);
 });
 
+registerCustomFunction('sum', [], (a: string, ...args: string[]) => {
+  console.log('sum', a, args[0]);
+  return 3;
+});
+
 export function App() {
   const [resultScript, setResultScript] = useState<any>(null);
   const [result, setResult] = useState('');
@@ -22,7 +26,7 @@ export function App() {
     const compiledExpression = compileExpression(`25+5`);
     const expressionInfo = compileExpressionAsScriptNode(
       `customFunction(a,b,c);
-      return a+b+c;
+      return sum("A1:B2")+a+b+c;
     `
     );
 
