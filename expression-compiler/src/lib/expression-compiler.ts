@@ -9,6 +9,11 @@ import {
 
 const customFunctions: CustomFunctionRegistry = {};
 
+// Registers a custom function that can be used in expressions
+/**
+ * @param {string}  functionName - a name of a custom function to register
+ * @param {ICustomFunctionParameter[]}  parameters - an expression to compile
+ */
 export function registerCustomFunction(
   functionName: string,
   parameters: ICustomFunctionParameter[],
@@ -21,6 +26,11 @@ export function registerCustomFunction(
   };
 }
 
+// Compiles an expression and returns a function that takes a payload and returns the result of the expression
+/**
+ * @param {string}  expression - an expression to compile
+ * @returns {(payload?: any) => any} A function that takes a payload and returns the result of the expression
+ */
 export function compileExpression(expression: string) {
   const parser = new Parser();
 
@@ -30,9 +40,76 @@ export function compileExpression(expression: string) {
   }
   const compiler = new Compiler();
   compiler.setCustomFunctionRegistry(customFunctions);
-  return compiler.compile(ast as unknown as IASTTree);
+  const compileInfo = compiler.compile(ast as unknown as IASTTree);
+
+  return (
+    new Function('payload', `${compileInfo.script}`) as unknown as (
+      payload?: any
+    ) => any
+  ).bind(compileInfo.bindings);
 }
 
+export interface ICompiledScriptExpression {
+  id: string;
+  expressionFunction: (payload?: any) => any;
+}
+
+// Compiles an expression and adds the compiled script to the document and returns an object containing the id of the script node and a function that takes a payload and returns the result of the expression
+/**
+ * @param {string}  expression - an expression to compile
+ * @returns {ICompiledScriptExpression} An object containing the id of the script node and a function that takes a payload and returns the result of the expression
+ */
+export function compileExpressionAsScriptNode(
+  expression: string
+): ICompiledScriptExpression {
+  const parser = new Parser();
+
+  const ast = parser.parse(expression);
+  if (!ast) {
+    throw new Error('Invalid expression: parsing failed');
+  }
+  const compiler = new Compiler();
+  compiler.setCustomFunctionRegistry(customFunctions);
+  const compileInfo = compiler.compile(ast as unknown as IASTTree);
+  const id = crypto.randomUUID().replace(new RegExp('-', 'g'), '');
+  const script = document.createElement('script');
+  script.id = id;
+  script.type = 'text/javascript';
+  script.text = `function helper_${id} (payload) {${compileInfo.script}};
+    bind_${id} = (bindings,payload) => {
+      window["function_${id}"] = helper_${id}.bind(bindings);
+    };
+  `;
+  document.head.appendChild(script);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as { [key: string]: any })[`bind_${id}`](compileInfo.bindings);
+  return {
+    id,
+    expressionFunction: (window as { [key: string]: any })[
+      `function_${id}`
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ] as unknown as (payload?: any) => any,
+  };
+}
+
+// Deletes a script node containing a compiled expression
+/**
+ * @param {string}  id - the id of the script node containing the compiled expression
+ * @returns {void}
+ */
+export function deleteExpressionScriptNode(id: string) {
+  const script = document.getElementById(id);
+  if (script) {
+    script.remove();
+  }
+}
+
+// Runs a compiled expression
+/**
+ * @param {(payload?: any) => any}  compiledExpression - a compiled expression
+ * @param {any}  payload - a payload to pass to the compiled expression
+ * @returns {any} The result of the expression
+ */
 export function runExpression(
   compiledExpression: (payload?: any) => any,
   payload: unknown

@@ -29,11 +29,7 @@ export class Compiler {
 
     this.mainProgram(ast);
     //console.log('codeScript', this.codeScript);
-    return (
-      new Function('payload', `${this.codeScript}`) as unknown as (
-        payload?: any
-      ) => any
-    ).bind(customBindings);
+    return { script: this.codeScript, bindings: customBindings };
   };
 
   public setCustomFunctionRegistry = (
