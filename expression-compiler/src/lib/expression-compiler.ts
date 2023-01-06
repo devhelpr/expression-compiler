@@ -9,8 +9,9 @@ import {
 
 const customFunctions: CustomFunctionRegistry = {};
 
-// Registers a custom function that can be used in expressions
 /**
+ * Registers a custom function that can be used in expressions
+ *
  * @param {string}  functionName - a name of a custom function to register
  * @param {ICustomFunctionParameter[]}  parameters - an expression to compile
  */
@@ -26,8 +27,9 @@ export function registerCustomFunction(
   };
 }
 
-// Compiles an expression and returns a function that takes a payload and returns the result of the expression
 /**
+ * Compiles an expression and returns a function that takes a payload and returns the result of the expression
+ *
  * @param {string}  expression - an expression to compile
  * @returns {(payload?: any) => any} A function that takes a payload and returns the result of the expression
  */
@@ -54,8 +56,9 @@ export interface ICompiledScriptExpression {
   expressionFunction: (payload?: any) => any;
 }
 
-// Compiles an expression and adds the compiled script to the document and returns an object containing the id of the script node and a function that takes a payload and returns the result of the expression
 /**
+ * Compiles an expression and adds the compiled script to the document and returns an object containing the id of the script node and a function that takes a payload and returns the result of the expression
+ *
  * @param {string}  expression - an expression to compile
  * @returns {ICompiledScriptExpression} An object containing the id of the script node and a function that takes a payload and returns the result of the expression
  */
@@ -92,8 +95,9 @@ export function compileExpressionAsScriptNode(
   };
 }
 
-// Deletes a script node containing a compiled expression
 /**
+ * Deletes a script node containing a compiled expression
+ *
  * @param {string}  id - the id of the script node containing the compiled expression
  * @returns {void}
  */
@@ -104,8 +108,9 @@ export function deleteExpressionScriptNode(id: string) {
   }
 }
 
-// Runs a compiled expression
 /**
+ * Runs a compiled expression
+ *
  * @param {(payload?: any) => any}  compiledExpression - a compiled expression
  * @param {any}  payload - a payload to pass to the compiled expression
  * @returns {any} The result of the expression
