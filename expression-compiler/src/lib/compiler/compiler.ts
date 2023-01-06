@@ -325,6 +325,7 @@ export class Compiler {
       }
       case 'CallExpression': {
         this.callExpression(expression);
+        this.codeScript += `;`;
         break;
       }
     }
@@ -721,7 +722,7 @@ export class Compiler {
       throw new Error(`function ${expressionNode.callee.name} not found`);
     }
 
-    this.codeScript += `);`;
+    this.codeScript += `)`;
 
     return true;
   };
