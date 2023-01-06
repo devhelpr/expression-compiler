@@ -18,12 +18,14 @@ const customFunctions: CustomFunctionRegistry = {};
 export function registerCustomFunction(
   functionName: string,
   parameters: ICustomFunctionParameter[],
-  customFunction: CustomFunctionDeclaration
+  customFunction: CustomFunctionDeclaration,
+  receivePayloadAsFirstParameter = false
 ) {
   customFunctions[functionName] = {
     functionName,
     customFunction,
     parameters,
+    receivePayloadAsFirstParameter,
   };
 }
 

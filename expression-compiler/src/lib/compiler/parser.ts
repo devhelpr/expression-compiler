@@ -649,6 +649,7 @@ export class Parser {
 
   _isLiteral = (tokenType: string) => {
     return (
+      tokenType === 'payload' ||
       tokenType === 'StateMachine' ||
       tokenType === 'HEXNUMBER' ||
       tokenType === 'NUMBER' ||
@@ -669,6 +670,8 @@ export class Parser {
 
   Literal = () => {
     switch (this._lookahead.type) {
+      case 'payload':
+        return this.PayloadLiteral();
       case 'RANGE':
         return this.RangeLiteral();
       case 'HEXNUMBER':
@@ -685,6 +688,13 @@ export class Parser {
         return this.NullLiteral();
     }
     throw new SyntaxError(`Literal: unexpected literal production`);
+  };
+
+  PayloadLiteral = () => {
+    this._eat('payload');
+    return {
+      type: 'PayloadLiteral',
+    };
   };
 
   BooleanLiteral = (value: any) => {

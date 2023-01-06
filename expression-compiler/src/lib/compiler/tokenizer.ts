@@ -39,6 +39,7 @@ const Specifcation: any[] = [
   [/^\bfor\b/, 'for'],
   [/^\bfunction\b/, 'function'],
   [/^\breturn\b/, 'return'],
+  [/^\bpayload\b/, 'payload'],
 
   [/^and/, 'LOGICAL_AND_KEYWORD'],
   [/^or/, 'LOGICAL_OR_KEYWORD'],

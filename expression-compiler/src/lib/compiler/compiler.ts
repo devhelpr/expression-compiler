@@ -159,6 +159,9 @@ export class Compiler {
       case 'StringLiteral':
         this.codeScript += `"${expression.value || ''}"`;
         break;
+      case 'PayloadLiteral':
+        this.codeScript += `payload`;
+        break;
       case 'Identifier':
         if (expression.name) {
           if (this.constantDefinitions[expression.name] !== undefined) {
@@ -407,6 +410,9 @@ export class Compiler {
         break;
       case 'StringLiteral':
         this.codeScript += `"${expressionNode.value || ''}"`;
+        break;
+      case 'PayloadLiteral':
+        this.codeScript += `payload`;
         break;
       case 'Identifier':
         if (expressionNode.name) {
@@ -684,6 +690,12 @@ export class Compiler {
     const customFunction = this.customFunctions[expressionNode.callee.name];
     if (customFunction) {
       this.codeScript += `this.${expressionNode.callee.name}(`;
+      if (customFunction.receivePayloadAsFirstParameter) {
+        this.codeScript += `payload`;
+        if (expressionNode.arguments.length > 0) {
+          this.codeScript += `,`;
+        }
+      }
     } else {
       this.codeScript += `${expressionNode.callee.name}(`;
     }
