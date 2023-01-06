@@ -150,6 +150,12 @@ export class Compiler {
       case 'RangeLiteral':
         this.codeScript += `"${expression.value || ''}"`;
         break;
+      case 'RowLiteral':
+        this.codeScript += `"${expression.value || ''}"`;
+        break;
+      case 'ColumnLiteral':
+        this.codeScript += `"${expression.value || ''}"`;
+        break;
       case 'BooleanLiteral':
         this.codeScript += `${expression.value ? 'true' : 'false'}`;
         break;
@@ -401,6 +407,12 @@ export class Compiler {
         }
         break;
       case 'RangeLiteral':
+        this.codeScript += `"${expressionNode.value || ''}"`;
+        break;
+      case 'RowLiteral':
+        this.codeScript += `"${expressionNode.value || ''}"`;
+        break;
+      case 'ColumnLiteral':
         this.codeScript += `"${expressionNode.value || ''}"`;
         break;
       case 'BooleanLiteral':

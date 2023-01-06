@@ -7,6 +7,8 @@ const Specifcation: any[] = [
   [/^\/\*[\s\S]*?\*\//, null],
 
   [/^\w+\d+:\w+\d+/, 'RANGE'],
+  [/^\brow:\d+/, 'ROW'],
+  [/^\bcolumn:\w+/, 'COLUMN'],
 
   // symbols , delimiters
   [/^;/, ';'],

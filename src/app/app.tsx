@@ -25,7 +25,7 @@ export function App() {
     const compiledExpression = compileExpression(`25+5`);
     const expressionInfo = compileExpressionAsScriptNode(
       `customFunction(a,b,c);
-      return sum(payload, "A1:B2")+a+b+c;
+      return sum(payload, "A1:B2")+sum(payload, "Column:B")+sum(payload, "Row:1")+a+b+c;
     `
     );
 

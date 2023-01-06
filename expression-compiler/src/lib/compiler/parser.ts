@@ -655,6 +655,8 @@ export class Parser {
       tokenType === 'NUMBER' ||
       tokenType === 'STRING' ||
       tokenType === 'RANGE' ||
+      tokenType === 'ROW' ||
+      tokenType === 'COLUMN' ||
       tokenType === 'true' ||
       tokenType === 'false' ||
       tokenType === 'null'
@@ -674,6 +676,10 @@ export class Parser {
         return this.PayloadLiteral();
       case 'RANGE':
         return this.RangeLiteral();
+      case 'ROW':
+        return this.RowLiteral();
+      case 'COLUMN':
+        return this.ColumnLiteral();
       case 'HEXNUMBER':
         return this.HexNumberLiteral();
       case 'NUMBER':
@@ -736,6 +742,22 @@ export class Parser {
     const token = this._eat('RANGE');
     return {
       type: 'RangeLiteral',
+      value: token.value,
+    };
+  };
+
+  RowLiteral = () => {
+    const token = this._eat('ROW');
+    return {
+      type: 'RowLiteral',
+      value: token.value,
+    };
+  };
+
+  ColumnLiteral = () => {
+    const token = this._eat('COLUMN');
+    return {
+      type: 'ColumnLiteral',
       value: token.value,
     };
   };
