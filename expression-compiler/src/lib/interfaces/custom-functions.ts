@@ -7,6 +7,7 @@ export interface ICustomFunction {
   functionName: string;
   parameters: ICustomFunctionParameter[];
   customFunction: CustomFunctionDeclaration;
+  receivePayloadAsFirstParameter: boolean;
 }
 
 export interface ICustomFunctionParameter {
