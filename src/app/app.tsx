@@ -12,8 +12,8 @@ registerCustomFunction('customFunction', [], (a, b, c) => {
   console.log('customFunction called', a, b, c);
 });
 
-registerCustomFunction('sum', [], (payload, a: string, ...args: string[]) => {
-  console.log('sum', payload, a, args[0]);
+registerCustomFunction('sum', [], (payload, a: string) => {
+  console.log('sum', payload, a);
   return 3;
 });
 
@@ -28,7 +28,14 @@ export function App() {
       return sum(payload, "A1:B2")+sum(payload, "Column:B")+sum(payload, "Row:1")+a+b+c;
     `
     );
-
+    console.log(
+      'expressionInfo.expressionFunction',
+      expressionInfo.expressionFunction({
+        a: 1,
+        b: 2,
+        c: 3,
+      })
+    );
     setResultScript(
       expressionInfo.expressionFunction({
         a: 1,
@@ -83,7 +90,7 @@ export function App() {
       <h1>Expression compiler!</h1>
       <p>Result: {(result || 0).toString()}</p>
       <pre>{JSON.stringify(result, null, 2)}</pre>
-      <p>resultScript: {resultScript}</p>
+      <p>resultScript: {JSON.stringify(resultScript, null, 2)}</p>
     </div>
   );
 }

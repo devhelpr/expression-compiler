@@ -86,8 +86,10 @@ export function compileExpressionAsScriptNode(
     };
   `;
   document.head.appendChild(script);
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (window as { [key: string]: any })[`bind_${id}`](compileInfo.bindings);
+
   return {
     id,
     expressionFunction: (window as { [key: string]: any })[

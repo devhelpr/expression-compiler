@@ -64,7 +64,7 @@ export class Compiler {
           this.blockStatement(statementNode);
           break;
         case 'ExpressionStatement':
-          this.expressionStatement(statementNode, true);
+          this.expressionStatement(statementNode);
           break;
         case 'VariableStatement':
           this.variableStatement(statementNode);
@@ -135,10 +135,7 @@ export class Compiler {
     return this.getTypeFromNode(node);
   };
 
-  expressionStatement = (
-    expressionStatementNode: any,
-    includeDrop: boolean
-  ) => {
+  expressionStatement = (expressionStatementNode: any) => {
     if (expressionStatementNode && expressionStatementNode.expression) {
       const expression = expressionStatementNode.expression;
       this.expression(expression, 'float');
@@ -148,16 +145,16 @@ export class Compiler {
   expression = (expression: any, valType: string) => {
     switch (expression.type) {
       case 'RangeLiteral':
-        this.codeScript += `"${expression.value || ''}"`;
+        this.rangeLiteral(expression.value);
         break;
       case 'RowLiteral':
-        this.codeScript += `"${expression.value || ''}"`;
+        this.rowLiteral(expression.value);
         break;
       case 'ColumnLiteral':
-        this.codeScript += `"${expression.value || ''}"`;
+        this.columnLiteral(expression.value);
         break;
       case 'BooleanLiteral':
-        this.codeScript += `${expression.value ? 'true' : 'false'}`;
+        this.booleanLiteral(expression.value);
         break;
       case 'NumberLiteral':
         this.codeScript += `${expression.value}`;
@@ -169,160 +166,16 @@ export class Compiler {
         this.codeScript += `payload`;
         break;
       case 'Identifier':
-        if (expression.name) {
-          if (this.constantDefinitions[expression.name] !== undefined) {
-            this.codeScript += `${this.constantDefinitions[expression.name]}`;
-          } else if (this.localVarablesList.indexOf(expression.name) >= 0) {
-            const variableIndex = this.localVarablesList.indexOf(
-              expression.name
-            );
-            if (variableIndex >= 0) {
-              this.codeScript += `local_${variableIndex}`;
-            }
-          } else {
-            throw new Error(
-              `Unknown variable "${expression.name}" in Expression`
-            );
-          }
-        } else {
-          throw new Error(`Identifier without variable found in Expression`);
-        }
+        this.identifier(expression);
         break;
       case 'AssignmentExpression':
-        if (expression.operator === '=') {
-          if (expression.left && expression.left.type === 'Identifier') {
-            let valType = 'float';
-            if (this.localVarablesList.indexOf(expression.left.name) >= 0) {
-              const variableIndex = this.localVarablesList.indexOf(
-                expression.left.name
-              );
-              if (variableIndex >= 0) {
-                valType = this.localVarablesTypeList[variableIndex];
-              }
-            }
-
-            if (this.localVarablesList.indexOf(expression.left.name) >= 0) {
-              const variableIndex = this.localVarablesList.indexOf(
-                expression.left.name
-              );
-              if (variableIndex >= 0) {
-                this.codeScript += `local_${variableIndex} = `;
-              }
-            }
-
-            this.binaryExpression(expression.right, valType);
-            this.codeScript += ';';
-          }
-        } else if (expression.operator === '+=') {
-          if (expression.left && expression.left.type === 'Identifier') {
-            let valType = 'float';
-            if (this.localVarablesList.indexOf(expression.left.name) >= 0) {
-              const variableIndex = this.localVarablesList.indexOf(
-                expression.left.name
-              );
-              if (variableIndex >= 0) {
-                valType = this.localVarablesTypeList[variableIndex];
-              }
-            }
-
-            if (expression.right.type !== 'NumberLiteral') {
-              throw new Error(
-                `Unsupported right side "${expression.right.type}" in Expression with operator +=`
-              );
-            }
-            //let initialValue = 0;
-            const variableIndex = this.localVarablesList.indexOf(
-              expression.left.name
-            );
-            if (variableIndex >= 0) {
-              this.codeScript += `${expression.left.name} = local_${variableIndex};`;
-            }
-
-            this.binaryExpression(expression.right, valType);
-
-            this.codeScript += `${expression.left.name} += ${expression.right.value};`;
-
-            if (this.localVarablesList.indexOf(expression.left.name) >= 0) {
-              const variableIndex = this.localVarablesList.indexOf(
-                expression.left.name
-              );
-              if (variableIndex >= 0) {
-                this.codeScript += `local_${variableIndex} = ${expression.left.name};`;
-              }
-            } else {
-              throw new Error(
-                `Unknown variable "${expression.name}" in Expression`
-              );
-            }
-          }
-        } else {
-          throw new Error(
-            `Unknown operator "${expression.operator}" in Expression`
-          );
-        }
+        this.assignmentExpression(expression);
         break;
       case 'BinaryExpression':
-        this.binaryExpression(expression.left, valType);
-
-        if (expression.operator === '%' && valType === 'float') {
-          throw new Error(
-            `Modulo operator not supported for f32: "${expression.operator}" found in BinaryExpression`
-          );
-        }
-
-        if (expression.operator === '+') {
-          this.codeScript += `+`;
-        } else if (expression.operator === '-') {
-          this.codeScript += `-`;
-        } else if (expression.operator === '*') {
-          this.codeScript += `*`;
-        } else if (expression.operator === '/') {
-          this.codeScript += `/`;
-        } else if (expression.operator === '%') {
-          this.codeScript += `%`;
-        } else if (expression.operator === '==') {
-          this.codeScript += `==`;
-        } else if (expression.operator === '!=') {
-          this.codeScript += `!=`;
-        } else if (expression.operator === '>=') {
-          this.codeScript += `>=`;
-        } else if (expression.operator === '<=') {
-          this.codeScript += `<=`;
-        } else if (expression.operator === '>') {
-          this.codeScript += `>`;
-        } else if (expression.operator === '<') {
-          this.codeScript += `<`;
-        } else {
-          throw new Error(
-            `Unknown operator "${expression.operator}" found in BinaryExpression`
-          );
-        }
-
-        this.binaryExpression(expression.right, valType);
+        this.binaryExpression(expression, valType);
         break;
       case 'LogicalExpression': {
-        this.binaryExpression(expression.left, valType);
-
-        let useValType = 'float';
-        const outputType =
-          expression.left?.outputType ?? expression.right?.outputType ?? '';
-        if (outputType === 'integer') {
-          useValType = 'integer';
-        }
-
-        if (expression.operator === '&&' || expression.operator === 'and') {
-          this.codeScript += ` && `;
-        } else if (
-          expression.operator === '||' ||
-          expression.operator === 'or'
-        ) {
-          this.codeScript += ` || `;
-        }
-
-        this.binaryExpression(expression.right, valType);
-
-        // TODO : xor .. shl .. shr .. rot etc..
-
+        this.logicalExpression(expression, valType);
         break;
       }
       case 'MemberExpression': {
@@ -334,8 +187,192 @@ export class Compiler {
         this.codeScript += `;`;
         break;
       }
+      case 'UnaryExpression':
+        this.unaryExpression(expression, valType);
+        break;
     }
     return true;
+  };
+
+  rangeLiteral = (value: any) => {
+    this.codeScript += `"${value || ''}"`;
+  };
+  rowLiteral = (value: any) => {
+    this.codeScript += `"${value || ''}"`;
+  };
+  columnLiteral = (value: any) => {
+    this.codeScript += `"${value || ''}"`;
+  };
+  booleanLiteral = (value: any) => {
+    this.codeScript += `${value ? 'true' : 'false'}`;
+  };
+
+  assignmentExpression = (expression: any) => {
+    if (expression.operator === '=') {
+      if (expression.left && expression.left.type === 'Identifier') {
+        let valType = 'float';
+        if (this.localVarablesList.indexOf(expression.left.name) >= 0) {
+          const variableIndex = this.localVarablesList.indexOf(
+            expression.left.name
+          );
+          if (variableIndex >= 0) {
+            valType = this.localVarablesTypeList[variableIndex];
+          }
+        }
+
+        if (this.localVarablesList.indexOf(expression.left.name) >= 0) {
+          const variableIndex = this.localVarablesList.indexOf(
+            expression.left.name
+          );
+          if (variableIndex >= 0) {
+            this.codeScript += `local_${variableIndex} = `;
+          }
+        }
+
+        this.expression(expression.right, valType);
+        this.codeScript += ';';
+      }
+    } else if (expression.operator === '+=') {
+      if (expression.left && expression.left.type === 'Identifier') {
+        let valType = 'float';
+        if (this.localVarablesList.indexOf(expression.left.name) >= 0) {
+          const variableIndex = this.localVarablesList.indexOf(
+            expression.left.name
+          );
+          if (variableIndex >= 0) {
+            valType = this.localVarablesTypeList[variableIndex];
+          }
+        }
+
+        if (expression.right.type !== 'NumberLiteral') {
+          throw new Error(
+            `Unsupported right side "${expression.right.type}" in Expression with operator +=`
+          );
+        }
+        //let initialValue = 0;
+        const variableIndex = this.localVarablesList.indexOf(
+          expression.left.name
+        );
+        if (variableIndex >= 0) {
+          this.codeScript += `${expression.left.name} = local_${variableIndex};`;
+        }
+
+        this.expression(expression.right, valType);
+
+        this.codeScript += `${expression.left.name} += ${expression.right.value};`;
+
+        if (this.localVarablesList.indexOf(expression.left.name) >= 0) {
+          const variableIndex = this.localVarablesList.indexOf(
+            expression.left.name
+          );
+          if (variableIndex >= 0) {
+            this.codeScript += `local_${variableIndex} = ${expression.left.name};`;
+          }
+        } else {
+          throw new Error(
+            `Unknown variable "${expression.name}" in Expression`
+          );
+        }
+      }
+    } else {
+      throw new Error(
+        `Unknown operator "${expression.operator}" in Expression`
+      );
+    }
+  };
+
+  identifier = (expression: any) => {
+    if (expression.name) {
+      if (this.constantDefinitions[expression.name] !== undefined) {
+        this.codeScript += `${this.constantDefinitions[expression.name]}`;
+      } else if (this.localVarablesList.indexOf(expression.name) >= 0) {
+        const variableIndex = this.localVarablesList.indexOf(expression.name);
+        if (variableIndex >= 0) {
+          this.codeScript += `local_${variableIndex}`;
+        }
+      } else {
+        this.codeScript += `payload.${expression.name}`;
+      }
+    } else {
+      throw new Error(`Identifier without variable found in Expression`);
+    }
+  };
+
+  logicalExpression = (expression: any, valType: string) => {
+    this.expression(expression.left, valType);
+
+    let useValType = 'float';
+    const outputType =
+      expression.left?.outputType ?? expression.right?.outputType ?? '';
+    if (outputType === 'integer') {
+      useValType = 'integer';
+    }
+
+    if (expression.operator === '&&' || expression.operator === 'and') {
+      this.codeScript += ` && `;
+    } else if (expression.operator === '||' || expression.operator === 'or') {
+      this.codeScript += ` || `;
+    }
+
+    this.expression(expression.right, valType);
+
+    // TODO : xor .. shl .. shr .. rot etc..
+  };
+
+  unaryExpression = (expression: any, valType: string) => {
+    if (expression.operator === '-') {
+      if (expression.argument && expression.argument.type === 'NumberLiteral') {
+        if (valType === 'integer') {
+          this.codeScript += `-${expression.argument.value | 0}`;
+        } else {
+          this.codeScript += `-${expression.argument.value}`;
+        }
+      }
+    } else {
+      throw new Error(
+        `UnaryExpression "${expression.operator}" cannot be handled`
+      );
+    }
+  };
+
+  binaryExpression = (expression: any, valType: string) => {
+    this.expression(expression.left, valType);
+
+    if (expression.operator === '%' && valType === 'float') {
+      throw new Error(
+        `Modulo operator not supported for f32: "${expression.operator}" found in BinaryExpression`
+      );
+    }
+
+    if (expression.operator === '+') {
+      this.codeScript += `+`;
+    } else if (expression.operator === '-') {
+      this.codeScript += `-`;
+    } else if (expression.operator === '*') {
+      this.codeScript += `*`;
+    } else if (expression.operator === '/') {
+      this.codeScript += `/`;
+    } else if (expression.operator === '%') {
+      this.codeScript += `%`;
+    } else if (expression.operator === '==') {
+      this.codeScript += `==`;
+    } else if (expression.operator === '!=') {
+      this.codeScript += `!=`;
+    } else if (expression.operator === '>=') {
+      this.codeScript += `>=`;
+    } else if (expression.operator === '<=') {
+      this.codeScript += `<=`;
+    } else if (expression.operator === '>') {
+      this.codeScript += `>`;
+    } else if (expression.operator === '<') {
+      this.codeScript += `<`;
+    } else {
+      throw new Error(
+        `Unknown operator "${expression.operator}" found in BinaryExpression`
+      );
+    }
+
+    this.expression(expression.right, valType);
   };
 
   memberExpression = (expressionNode: any) => {
@@ -343,7 +380,7 @@ export class Compiler {
       expressionNode.object &&
       expressionNode.object.type === 'MemberExpression'
     ) {
-      this.binaryExpression(expressionNode.object, 'float');
+      this.expression(expressionNode.object, 'float');
       if (
         expressionNode.property &&
         expressionNode.property.type === 'Identifier'
@@ -368,87 +405,6 @@ export class Compiler {
           `Unsupported property "${expressionNode.property.type}" in MemberExpression`
         );
       }
-    }
-  };
-
-  binaryExpression = (expressionNode: any, valType: string) => {
-    switch (expressionNode.type) {
-      case 'MemberExpression': {
-        this.memberExpression(expressionNode);
-        break;
-      }
-      case 'CallExpression': {
-        this.callExpression(expressionNode);
-        break;
-      }
-      case 'LogicalExpression':
-        this.expression(expressionNode, valType);
-        break;
-      case 'BinaryExpression':
-        this.expression(expressionNode, valType);
-        break;
-      case 'UnaryExpression':
-        if (expressionNode.operator === '-') {
-          if (
-            expressionNode.argument &&
-            expressionNode.argument.type === 'NumberLiteral'
-          ) {
-            if (valType === 'integer') {
-              this.codeScript += `-${expressionNode.argument.value | 0}`;
-            } else {
-              this.codeScript += `-${expressionNode.argument.value}`;
-            }
-            break;
-          }
-        } else {
-          throw new Error(
-            `UnaryExpression "${expressionNode.operator}" cannot be handled`
-          );
-        }
-        break;
-      case 'RangeLiteral':
-        this.codeScript += `"${expressionNode.value || ''}"`;
-        break;
-      case 'RowLiteral':
-        this.codeScript += `"${expressionNode.value || ''}"`;
-        break;
-      case 'ColumnLiteral':
-        this.codeScript += `"${expressionNode.value || ''}"`;
-        break;
-      case 'BooleanLiteral':
-        this.codeScript += `${expressionNode.value ? 'true' : 'false'}`;
-        break;
-      case 'NumberLiteral':
-        this.codeScript += `${expressionNode.value | 0}`;
-        break;
-      case 'StringLiteral':
-        this.codeScript += `"${expressionNode.value || ''}"`;
-        break;
-      case 'PayloadLiteral':
-        this.codeScript += `payload`;
-        break;
-      case 'Identifier':
-        if (expressionNode.name) {
-          if (this.constantDefinitions[expressionNode.name] !== undefined) {
-            this.codeScript += `${
-              this.constantDefinitions[expressionNode.name]
-            };`;
-          } else if (this.localVarablesList.indexOf(expressionNode.name) >= 0) {
-            const variableIndex = this.localVarablesList.indexOf(
-              expressionNode.name
-            );
-            if (variableIndex >= 0) {
-              this.codeScript += `local_${variableIndex}`;
-            }
-          } else {
-            this.codeScript += `payload.${expressionNode.name}`;
-          }
-        } else {
-          throw new Error(
-            `Identifier without variable found in BinaryExpression`
-          );
-        }
-        break;
     }
   };
 
@@ -721,7 +677,7 @@ export class Compiler {
             paramType = functionDeclaration[0].localVarablesTypeList[index];
           }
         }
-        this.binaryExpression(argumentExpression, paramType);
+        this.expression(argumentExpression, paramType);
         if (index < expressionNode.arguments.length - 1) {
           this.codeScript += `,`;
         }

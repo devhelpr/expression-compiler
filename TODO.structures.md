@@ -1,6 +1,7 @@
 # structures
 
 - arrays / vectors
+- matrixes
 - hashmaps
 - linked lists
 - trees
@@ -20,3 +21,26 @@ y[2] = 5;
 
 a.push(4.0f);
 
+## matrixes
+
+- specify rows and columns
+
+let x = [
+    [1, 2, 3], 
+    [4, 5, 6]
+];
+
+should mean:
+
+(1)
+|1 2 3|
+|4 5 6|   
+
+OR
+
+(2)
+|1 4|
+|2 5|   
+|3 6|
+
+(1) makes more sense to me
