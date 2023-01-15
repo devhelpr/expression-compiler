@@ -21,7 +21,7 @@ export class Parser {
     this._tokenizer = new Tokenizer();
   }
 
-  parse = (expression: string): IASTTree | boolean => {
+  parse = (expression: string): IASTTree | false => {
     this._string = expression;
     this._isEndOfCode = false;
 
@@ -77,6 +77,12 @@ export class Parser {
       case 'do':
       case 'for':
         return this.IterationStatement();
+      case 'forEach':
+        return this.ForEachStatement();
+      case 'map':
+        return this.MapStatement();
+      case 'filter':
+        return this.FilterStatement();
       default:
         return this.ExpressionStatement();
     }
@@ -233,6 +239,50 @@ export class Parser {
     };
   };
 
+  ForEachStatement = (): any => {
+    this._eat('forEach');
+    const identifier = this.Identifier();
+    this._eat('in');
+    const listIdentifier = this.Identifier();
+    const body = this.Statement();
+    return {
+      type: 'ForEachStatement',
+      identifier,
+      listIdentifier,
+      body,
+    };
+  };
+
+  MapStatement = (): any => {
+    this._eat('map');
+    const identifier = this.Identifier();
+    this._eat('in');
+    const listIdentifier = this.Identifier();
+    this._eat('to');
+    const body = this.Statement();
+    return {
+      type: 'MapStatement',
+      identifier,
+      listIdentifier,
+      body,
+    };
+  };
+
+  FilterStatement = (): any => {
+    this._eat('filter');
+    const identifier = this.Identifier();
+    this._eat('in');
+    const listIdentifier = this.Identifier();
+    this._eat('where');
+    const test = this.Expression();
+    return {
+      type: 'FilterStatement',
+      identifier,
+      listIdentifier,
+      test,
+    };
+  };
+
   IfStatement = (): any => {
     this._eat('if');
     this._eat('(');
@@ -270,12 +320,13 @@ export class Parser {
   };
 
   VariableDeclaration = (): any => {
+    let variableType = '';
+    let variableSubType = '';
     const id = this.Identifier();
     if (this._lookahead.type === ':') {
       this._eat(':');
       // see VariableStatement
 
-      let variableType = '';
       if (this._lookahead.type === 'integer') {
         this._eat(this._lookahead.type);
         variableType = 'integer';
@@ -291,10 +342,23 @@ export class Parser {
       } else if (this._lookahead.type === 'range_type') {
         this._eat(this._lookahead.type);
         variableType = 'range';
+      } else if (this._lookahead.type === '[') {
+        this._eat(this._lookahead.type);
+        if (this._lookahead.type === 'integer') {
+          variableSubType = this._lookahead.value;
+          this._eat(this._lookahead.type);
+        }
+        if (this._lookahead.type === ']') {
+          this._eat(this._lookahead.type);
+          variableType = 'array';
+        } else {
+          throw new Error('Expected ]');
+        }
+        // token.value.slice(1, -1),
       }
 
-      if (this._lookahead.type === '=') {
-        this._eat('=');
+      if (this._lookahead.type === 'SIMPLE_ASSIGN') {
+        this._eat('SIMPLE_ASSIGN');
         if (this._lookahead.type === 'new') {
           this._eat('new');
           //
@@ -332,19 +396,47 @@ export class Parser {
     }
     const init =
       this._lookahead.type !== ';' && this._lookahead.type !== ','
-        ? this.VariableInitializer()
+        ? this.VariableInitializer(true)
         : null;
 
     return {
       type: 'VariableDeclaration',
       id,
       init,
+      variableType,
+      variableSubType,
     };
   };
 
-  VariableInitializer = () => {
-    this._eat('SIMPLE_ASSIGN');
-    return this.AssignmentExpression();
+  VariableInitializer = (eatSimpleAssign?: boolean) => {
+    if (eatSimpleAssign) {
+      this._eat('SIMPLE_ASSIGN');
+    }
+    if (this._lookahead.type === '[') {
+      this._eat('[');
+      const elements = [];
+      let variableType = '';
+      let loop = 0;
+      while (this._lookahead && this._lookahead.type !== ']') {
+        const expression = this.Expression();
+        if (loop === 0) {
+          variableType = expression.type;
+        } else {
+          if (variableType !== expression.type) {
+            throw new Error('Variable type mismatch in variable initializer');
+          }
+        }
+        elements.push(expression);
+        if (this._lookahead?.type === ',') {
+          this._eat(',');
+        }
+        loop++;
+      }
+      this._eat(']');
+      return { type: 'array', elements };
+    } else {
+      return this.AssignmentExpression();
+    }
   };
 
   EmptyStatement = () => {
@@ -554,6 +646,9 @@ export class Parser {
   };
 
   LeftHandSideExpression = (): any => {
+    if (this._lookahead != null && this._lookahead.type === 'filter') {
+      return this.FilterStatement();
+    }
     return this.CallMemberExpression();
   };
 

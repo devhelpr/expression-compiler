@@ -30,6 +30,21 @@ export function registerCustomFunction(
 }
 
 /**
+ * Parses an expression and returns the Abstract Syntax Tree
+ *
+ * @param {string}  expression - an expression to compile
+ * @returns {IASTTree} An Abstract Syntax Tree
+ */
+export function expressionAST(expression: string) {
+  const parser = new Parser();
+  const ast = parser.parse(expression);
+  if (!ast) {
+    throw new Error('Invalid expression: parsing failed');
+  }
+  return ast;
+}
+
+/**
  * Compiles an expression and returns a function that takes a payload and returns the result of the expression
  *
  * @param {string}  expression - an expression to compile

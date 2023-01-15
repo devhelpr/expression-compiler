@@ -3,6 +3,8 @@ import {
   compileExpression,
   compileExpressionAsScriptNode,
   deleteExpressionScriptNode,
+  expressionAST,
+  ICompiledScriptExpression,
   registerCustomFunction,
   runExpression,
 } from '@devhelpr/expression-compiler';
@@ -22,28 +24,83 @@ export function App() {
   const [result, setResult] = useState('');
   useEffect(() => {
     //const compiledExpression = compileExpression(`customFunction(A1:B1,A2,3)`);
-    const compiledExpression = compileExpression(`25+5`);
-    const expressionInfo = compileExpressionAsScriptNode(
-      `customFunction(a,b,c);
+    const expression = `
+      let list : [] = [2,24,5];
+      let listCopy : [];
+      list.push(25);
+      list[3] = 10;
+      let loop = 0;
+      let sum = 0;
+      listCopy = list;
+
+      listCopy = filter x in list where x > 5;
+
+      map item in list to {
+        let x = 0;
+        x = item * 4;
+        x;
+      }
+      forEach item in list {
+        sum = sum + item;
+      }
+      forEach item in listCopy {
+        sum = sum + item;
+      }
+      customFunction(list);
+      customFunction(listCopy);
+      
+      sum`;
+    /*
+
+    while (loop < list.length) {
+        sum  = sum + list[loop];
+        loop = loop + 1;
+      }
+        forEach item in list {
+            sum = sum + item;
+            //sum += item;
+        }
+        
+        map item in list to {
+          item * 3;
+        }
+
+        filter x in list where x > 3;
+
+        filter list forEach item where item > 3
+        filter list forEach item with {
+          let value = 3;
+          item > value;
+        }
+
+      */
+    let expressionInfo: ICompiledScriptExpression | undefined = undefined;
+    try {
+      console.log('AST', expressionAST(expression));
+      const compiledExpression = compileExpression(expression);
+      console.log('compiledExpression', compiledExpression);
+      expressionInfo = compileExpressionAsScriptNode(
+        `customFunction(a,b,c);
       return sum(payload, "A1:B2")+sum(payload, "Column:B")+sum(payload, "Row:1")+a+b+c;
     `
-    );
-    console.log(
-      'expressionInfo.expressionFunction',
-      expressionInfo.expressionFunction({
-        a: 1,
-        b: 2,
-        c: 3,
-      })
-    );
-    setResultScript(
-      expressionInfo.expressionFunction({
-        a: 1,
-        b: 2,
-        c: 3,
-      })
-    );
-    /*let loop=0;
+      );
+      console.log(
+        'expressionInfo.expressionFunction',
+        expressionInfo.expressionFunction({
+          a: 1,
+          b: 2,
+          c: 3,
+        })
+      );
+      setResultScript(
+        expressionInfo.expressionFunction({
+          a: 1,
+          b: 2,
+          c: 3,
+        })
+      );
+
+      /*let loop=0;
   let test = "test";
   let test2 = "hello";
   customFunction(2,3, 5 );
@@ -52,19 +109,19 @@ export function App() {
   }
   loop;
   */
-    //   function test() {
-    //     return 2;
-    //   }
-    //   return test();
-    // `);
+      //   function test() {
+      //     return 2;
+      //   }
+      //   return test();
+      // `);
 
-    //2+3`);
-    //if (20*3 > 20) {return true;} else {return false;}`);
+      //2+3`);
+      //if (20*3 > 20) {return true;} else {return false;}`);
 
-    //a+b.x.y.abc+2`);
-    //b.x.y.abc`);
+      //a+b.x.y.abc+2`);
+      //b.x.y.abc`);
 
-    /*
+      /*
 
   let x : integer = 1;
   x
@@ -74,15 +131,19 @@ export function App() {
     payload.a + payload.b
 
   */
-    setResult(
-      runExpression(compiledExpression, {
-        a: 2,
-        b: { x: { y: { abc: 10 } } },
-      })
-    );
-
+      setResult(
+        runExpression(compiledExpression, {
+          a: 2,
+          b: { x: { y: { abc: 10 } } },
+        })
+      );
+    } catch (e) {
+      setResult(e as unknown as string);
+    }
     return () => {
-      deleteExpressionScriptNode(expressionInfo.id);
+      if (expressionInfo) {
+        deleteExpressionScriptNode(expressionInfo.id);
+      }
     };
   }, []);
   return (

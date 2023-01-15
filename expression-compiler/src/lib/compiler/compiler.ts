@@ -84,6 +84,17 @@ export class Compiler {
         case 'FunctionDeclaration':
           this.functionDeclaration(statementNode);
           break;
+        case 'ForEachStatement':
+          this.forEachStatement(statementNode);
+          break;
+
+        case 'MapStatement':
+          this.mapStatement(statementNode);
+          break;
+
+        case 'FilterStatement':
+          this.filterStatement(statementNode);
+          break;
       }
     }
   };
@@ -190,6 +201,9 @@ export class Compiler {
       case 'UnaryExpression':
         this.unaryExpression(expression, valType);
         break;
+      case 'FilterStatement':
+        this.filterStatement(expression, true);
+        break;
     }
     return true;
   };
@@ -209,8 +223,13 @@ export class Compiler {
 
   assignmentExpression = (expression: any) => {
     if (expression.operator === '=') {
-      if (expression.left && expression.left.type === 'Identifier') {
-        let valType = 'float';
+      if (expression.left && expression.left.type === 'MemberExpression') {
+        this.memberExpression(expression.left);
+        this.codeScript += ' = ';
+        this.expression(expression.right, '');
+        this.codeScript += ';';
+      } else if (expression.left && expression.left.type === 'Identifier') {
+        let valType = '';
         if (this.localVarablesList.indexOf(expression.left.name) >= 0) {
           const variableIndex = this.localVarablesList.indexOf(
             expression.left.name
@@ -228,8 +247,18 @@ export class Compiler {
             this.codeScript += `local_${variableIndex} = `;
           }
         }
-
-        this.expression(expression.right, valType);
+        if (expression.right.type === 'Identifier') {
+          const variableIndex = this.localVarablesList.indexOf(
+            expression.right.name
+          );
+          if (variableIndex >= 0) {
+            this.codeScript += `structuredClone(local_${variableIndex})`;
+          } else {
+            this.expression(expression.right, valType);
+          }
+        } else {
+          this.expression(expression.right, valType);
+        }
         this.codeScript += ';';
       }
     } else if (expression.operator === '+=') {
@@ -376,11 +405,12 @@ export class Compiler {
   };
 
   memberExpression = (expressionNode: any) => {
+    console.log('memberExpression', expressionNode);
     if (
       expressionNode.object &&
       expressionNode.object.type === 'MemberExpression'
     ) {
-      this.expression(expressionNode.object, 'float');
+      this.expression(expressionNode.object, '');
       if (
         expressionNode.property &&
         expressionNode.property.type === 'Identifier'
@@ -399,7 +429,38 @@ export class Compiler {
         expressionNode.property &&
         expressionNode.property.type === 'Identifier'
       ) {
-        this.codeScript += `payload.${expressionNode.object.name}.${expressionNode.property.name}`;
+        const localVariableIndex = this.localVarablesList.indexOf(
+          expressionNode.object.name
+        );
+        if (localVariableIndex >= 0) {
+          const variableType = this.localVarablesTypeList[localVariableIndex];
+          if (variableType === 'array') {
+            const propertyNameVariableIndex = this.localVarablesList.indexOf(
+              expressionNode.property.name
+            );
+            if (propertyNameVariableIndex >= 0) {
+              this.codeScript += `local_${localVariableIndex}[local_${propertyNameVariableIndex}]`;
+            } else {
+              this.codeScript += `local_${localVariableIndex}.${expressionNode.property.name}`;
+            }
+          } else {
+            this.codeScript += `local_${localVariableIndex}.${expressionNode.property.name}`;
+          }
+        } else {
+          this.codeScript += `payload.${expressionNode.object.name}.${expressionNode.property.name}`;
+        }
+      } else if (
+        expressionNode.property &&
+        expressionNode.property.type === 'NumberLiteral'
+      ) {
+        const localVariableIndex = this.localVarablesList.indexOf(
+          expressionNode.object.name
+        );
+        if (localVariableIndex >= 0) {
+          this.codeScript += `local_${localVariableIndex}[${expressionNode.property.value}]`;
+        } else {
+          this.codeScript += `payload.${expressionNode.object.name}[${expressionNode.property.value}]`;
+        }
       } else {
         throw new Error(
           `Unsupported property "${expressionNode.property.type}" in MemberExpression`
@@ -461,6 +522,31 @@ export class Compiler {
                 } = ${variableDeclaration.init.value | 0};`;
               }
               */
+            } else if (
+              (variableDeclaration.variableType === 'array' &&
+                !variableDeclaration.init) ||
+              (variableDeclaration.init &&
+                variableDeclaration.init.type === 'array')
+            ) {
+              this.localVarablesTypeList.push('array');
+              this.localVarablesList.push(variableDeclaration.id.name);
+              console.log('array initializer found', variableDeclaration.init);
+              this.codeScript += `let local_${
+                this.localVarablesList.length - 1
+              } = [`;
+              if (variableDeclaration.init) {
+                variableDeclaration.init.elements.forEach(
+                  (element: any, index: number) => {
+                    console.log(element);
+                    this.expression(element, '');
+                    if (index < variableDeclaration.init.elements.length - 1) {
+                      this.codeScript += `,`;
+                    }
+                  }
+                );
+              }
+
+              this.codeScript += `];`;
             } else {
               throw new Error('Variable initializer can only be a number.');
             }
@@ -666,7 +752,12 @@ export class Compiler {
         }
       }
     } else {
-      this.codeScript += `${expressionNode.callee.name}(`;
+      if (expressionNode.callee?.type === 'MemberExpression') {
+        this.memberExpression(expressionNode.callee);
+        this.codeScript += `(`;
+      } else {
+        this.codeScript += `${expressionNode.callee.name}(`;
+      }
     }
     expressionNode.arguments.forEach(
       (argumentExpression: any, index: number) => {
@@ -684,14 +775,126 @@ export class Compiler {
       }
     );
 
-    const functionIndex = this.functionList.indexOf(expressionNode.callee.name);
+    if (expressionNode.callee?.type === 'MemberExpression') {
+      //this.memberExpression(expressionNode.callee);
+    } else {
+      const functionIndex = this.functionList.indexOf(
+        expressionNode.callee.name
+      );
 
-    if (functionIndex < 0 && !customFunction) {
-      throw new Error(`function ${expressionNode.callee.name} not found`);
+      if (functionIndex < 0 && !customFunction) {
+        throw new Error(`function ${expressionNode.callee.name} not found`);
+      }
     }
 
     this.codeScript += `)`;
 
     return true;
+  };
+
+  forEachStatement = (forEachStatementNode: any) => {
+    if (
+      forEachStatementNode.identifier &&
+      forEachStatementNode.listIdentifier &&
+      forEachStatementNode.body
+    ) {
+      const stackLocalVarablesList: string[] = [...this.localVarablesList];
+      const stackLocalVarablesTypeList: string[] = [
+        ...this.localVarablesTypeList,
+      ];
+
+      this.localVarablesList.push(forEachStatementNode.identifier.name);
+      this.localVarablesTypeList.push('integer');
+      const listIdentifierLocalVariableindex = this.localVarablesList.indexOf(
+        forEachStatementNode.listIdentifier.name
+      );
+      this.codeScript += `for (let local_${
+        this.localVarablesList.length - 1
+      } of local_${listIdentifierLocalVariableindex}) {`;
+      this.statement(forEachStatementNode.body);
+
+      this.codeScript += `};`;
+
+      this.localVarablesList = stackLocalVarablesList;
+      this.localVarablesTypeList = stackLocalVarablesTypeList;
+    }
+  };
+
+  mapStatement = (mapStatementNode: any) => {
+    if (
+      mapStatementNode.identifier &&
+      mapStatementNode.listIdentifier &&
+      mapStatementNode.body &&
+      mapStatementNode.body.body
+    ) {
+      const stackLocalVarablesList: string[] = [...this.localVarablesList];
+      const stackLocalVarablesTypeList: string[] = [
+        ...this.localVarablesTypeList,
+      ];
+
+      this.localVarablesList.push(mapStatementNode.identifier.name);
+      this.localVarablesTypeList.push('integer');
+      const listIdentifierLocalVariableindex = this.localVarablesList.indexOf(
+        mapStatementNode.listIdentifier.name
+      );
+      this.codeScript += `local_${listIdentifierLocalVariableindex} = local_${listIdentifierLocalVariableindex}.map((local_${
+        this.localVarablesList.length - 1
+      }) => {`;
+      //this.statement(mapStatementNode.body);
+
+      mapStatementNode.body.body.forEach(
+        (statementNode: any, index: number) => {
+          if (
+            index === mapStatementNode.body.body.length - 1 &&
+            statementNode.type === 'ExpressionStatement'
+          ) {
+            this.codeScript += 'return ';
+          }
+          this.statement(statementNode, true);
+        }
+      );
+
+      this.codeScript += `});`;
+
+      this.localVarablesList = stackLocalVarablesList;
+      this.localVarablesTypeList = stackLocalVarablesTypeList;
+    }
+  };
+
+  filterStatement = (mapStatementNode: any, isExpression?: boolean) => {
+    if (
+      mapStatementNode.identifier &&
+      mapStatementNode.listIdentifier &&
+      mapStatementNode.test
+    ) {
+      const stackLocalVarablesList: string[] = [...this.localVarablesList];
+      const stackLocalVarablesTypeList: string[] = [
+        ...this.localVarablesTypeList,
+      ];
+
+      this.localVarablesList.push(mapStatementNode.identifier.name);
+      this.localVarablesTypeList.push('integer');
+      const listIdentifierLocalVariableindex = this.localVarablesList.indexOf(
+        mapStatementNode.listIdentifier.name
+      );
+
+      if (!isExpression) {
+        this.codeScript += `local_${listIdentifierLocalVariableindex} = `;
+      }
+
+      this.codeScript += `local_${listIdentifierLocalVariableindex}.filter((local_${
+        this.localVarablesList.length - 1
+      }) => `;
+
+      this.expression(mapStatementNode.test, '');
+
+      this.codeScript += `)`;
+      if (!isExpression) {
+        this.codeScript += `;`;
+      }
+
+      this.localVarablesList = stackLocalVarablesList;
+      this.localVarablesTypeList = stackLocalVarablesTypeList;
+    }
   };
 }

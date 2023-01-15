@@ -10,6 +10,8 @@ const Specifcation: any[] = [
   [/^\brow:\d+/, 'ROW'],
   [/^\bcolumn:\w+/, 'COLUMN'],
 
+  //[/^\b[\w+]\b/, 'array_type'],
+
   // symbols , delimiters
   [/^;/, ';'],
   [/^:/, ':'],
@@ -37,7 +39,14 @@ const Specifcation: any[] = [
   [/^\bfalse\b/, 'false'],
   [/^\bnull\b/, 'null'],
   [/^\bwhile\b/, 'while'],
+  [/^\bforEach\b/, 'forEach'],
+  [/^\bmap\b/, 'map'],
+  [/^\bfilter\b/, 'filter'],
+  [/^\breduce\b/, 'reduce'],
+  [/^\bwhere\b/, 'where'],
+  [/^\bin\b/, 'in'],
   [/^\bdo\b/, 'do'],
+  [/^\bto\b/, 'to'],
   [/^\bfor\b/, 'for'],
   [/^\bfunction\b/, 'function'],
   [/^\breturn\b/, 'return'],
@@ -54,7 +63,7 @@ const Specifcation: any[] = [
   // identifiers
   [/^\w+/, 'IDENTIFIER'],
 
-  // Eqauality operator == !=
+  // Equality operator == !=
   [/^[=!]=/, 'EQUALITY_OPERATOR'],
 
   // assign operators = += -= *= /=
