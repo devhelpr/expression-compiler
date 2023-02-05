@@ -5,12 +5,28 @@ import {
 } from './expression-compiler';
 
 describe('ExpressionCompiler', () => {
-  it('should return true', () => {
+  it('should return true for the expression 2 + 5 == 7', () => {
     const compiledExpression = compileExpression('2 + 5 == 7');
     expect(compiledExpression).toBeTruthy();
 
     const result = runExpression(compiledExpression, {});
-    expect(result).toBeTruthy();
+    expect(result).toBe(true);
+  });
+
+  it('should return false for the expression 2 + 5 == 8', () => {
+    const compiledExpression = compileExpression('2 + 5 == 8');
+    expect(compiledExpression).toBeTruthy();
+
+    const result = runExpression(compiledExpression, {});
+    expect(result).toBe(false);
+  });
+
+  it('should return true for the expression 2 + 5 == (3 * 7) / 3', () => {
+    const compiledExpression = compileExpression('2 + 5 == (3 * 7) / 3');
+    expect(compiledExpression).toBeTruthy();
+
+    const result = runExpression(compiledExpression, {});
+    expect(result).toBe(true);
   });
 
   it('should return 9', () => {
