@@ -17,3 +17,8 @@ npm publish --access public
 ## new publishable library
 
  npx nx g @nrwl/react:library exprcomp --publishable --importPath @devhelpr/exprcomp
+
+## todo
+
+- [ ] add types (no more any)
+- [ ] add tests

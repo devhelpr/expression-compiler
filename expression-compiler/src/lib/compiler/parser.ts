@@ -1,8 +1,21 @@
 import {
+  IASTAssignmentExpressionNode,
+  IASTBinaryExpressionNode,
+  IASTBlockNode,
   IASTConstantNode,
+  IASTExpressionNode,
+  IASTFilterStatementNode,
+  IASTForEachStatementNode,
   IASTFunctionNode,
+  IASTIfStatementNode,
+  IASTLogicalExpressionNode,
+  IASTMapStatementNode,
+  IASTNode,
   IASTReturnNode,
   IASTTree,
+  IASTVariableDeclarationNode,
+  IASTVariableStatementNode,
+  IASTWhileStatementNode,
   IFunctionParameter,
 } from '../interfaces/ast';
 import { VariableType } from '../interfaces/variable-type';
@@ -41,8 +54,12 @@ export class Parser {
     };
   };
 
-  StatementList = (stopLookahead: any = null) => {
-    const statementList = [this.Statement()];
+  StatementList = (stopLookahead?: string): IASTNode[] => {
+    const statementList: IASTNode[] = [];
+    const statement = this.Statement();
+    if (statement) {
+      statementList.push(statement);
+    }
     while (this._lookahead != null && this._lookahead.type !== stopLookahead) {
       const statement = this.Statement();
       if (statement) {
@@ -52,7 +69,7 @@ export class Parser {
     return statementList;
   };
 
-  Statement = () => {
+  Statement = (): IASTNode | null => {
     if (!this._lookahead) {
       return null;
     }
@@ -195,10 +212,8 @@ export class Parser {
     };
   };
 
-  IterationStatement = (): any => {
+  IterationStatement = (): IASTWhileStatementNode | null => {
     switch (this._lookahead.type) {
-      case 'while_i32':
-        return this.WhileStatement();
       case 'while':
         return this.WhileStatement();
       case 'do':
@@ -208,7 +223,7 @@ export class Parser {
     }
   };
 
-  WhileStatement = (): any => {
+  WhileStatement = (): IASTWhileStatementNode => {
     this._eat('while');
     this._eat('(');
     const test = this.Expression();
@@ -222,7 +237,7 @@ export class Parser {
     };
   };
 
-  DoWhileStatement = (): any => {
+  DoWhileStatement = (): IASTWhileStatementNode => {
     this._eat('do');
     const body = this.Statement();
     this._eat('while');
@@ -239,7 +254,7 @@ export class Parser {
     };
   };
 
-  ForEachStatement = (): any => {
+  ForEachStatement = (): IASTForEachStatementNode => {
     this._eat('forEach');
     const identifier = this.Identifier();
     this._eat('in');
@@ -253,7 +268,7 @@ export class Parser {
     };
   };
 
-  MapStatement = (): any => {
+  MapStatement = (): IASTMapStatementNode => {
     this._eat('map');
     const identifier = this.Identifier();
     this._eat('in');
@@ -268,7 +283,7 @@ export class Parser {
     };
   };
 
-  FilterStatement = (): any => {
+  FilterStatement = (): IASTFilterStatementNode => {
     this._eat('filter');
     const identifier = this.Identifier();
     this._eat('in');
@@ -283,7 +298,7 @@ export class Parser {
     };
   };
 
-  IfStatement = (): any => {
+  IfStatement = (): IASTIfStatementNode => {
     this._eat('if');
     this._eat('(');
     const test = this.Expression();
@@ -301,7 +316,7 @@ export class Parser {
     };
   };
 
-  VariableStatement = (): any => {
+  VariableStatement = (): IASTVariableStatementNode => {
     this._eat('let');
     const declarations = this.VariableDeclarationsList();
     this._eat(';');
@@ -311,15 +326,15 @@ export class Parser {
     };
   };
 
-  VariableDeclarationsList = (): any => {
-    const declarations: any[] = [];
+  VariableDeclarationsList = (): IASTVariableDeclarationNode[] => {
+    const declarations: IASTVariableDeclarationNode[] = [];
     do {
       declarations.push(this.VariableDeclaration());
     } while (this._lookahead.type === ',' && this._eat(','));
     return declarations;
   };
 
-  VariableDeclaration = (): any => {
+  VariableDeclaration = (): IASTVariableDeclarationNode => {
     let variableType = '';
     let variableSubType = '';
     const id = this.Identifier();
@@ -359,39 +374,13 @@ export class Parser {
 
       if (this._lookahead.type === 'SIMPLE_ASSIGN') {
         this._eat('SIMPLE_ASSIGN');
-        if (this._lookahead.type === 'new') {
-          this._eat('new');
-          //
-          let size = 1;
-          if (this._lookahead.type === 'size') {
-            this._eat('size');
-            const value = this.NumberLiteral();
-            size = value.value;
-          }
-          if (this._lookahead.type === ';') {
-            this._eat(';');
+        const init = this.VariableInitializer();
 
-            return {
-              type: 'VariableDeclaration',
-              id,
-              init: {
-                type: 'NewMemoryVariable',
-                variableType: variableType,
-                size: size,
-              },
-            };
-          } else {
-            // throw ..
-          }
-        } else {
-          const init = this.VariableInitializer();
-
-          return {
-            type: 'VariableDeclaration',
-            id,
-            init,
-          };
-        }
+        return {
+          type: 'VariableDeclaration',
+          id,
+          init,
+        };
       }
     }
     const init =
@@ -446,7 +435,7 @@ export class Parser {
     };
   };
 
-  BlockStatement = (): any => {
+  BlockStatement = (): IASTBlockNode => {
     this._eat('{');
     const body = this._lookahead.type !== '}' ? this.StatementList('}') : [];
     this._eat('}');
@@ -456,7 +445,7 @@ export class Parser {
     };
   };
 
-  ExpressionStatement = (): any => {
+  ExpressionStatement = (): IASTExpressionNode => {
     const expression = this.Expression();
     if (!this._isEndOfCode) {
       this._eat(';', true);
@@ -473,7 +462,7 @@ export class Parser {
     return this.AssignmentExpression();
   };
 
-  AssignmentExpression = (): any => {
+  AssignmentExpression = (): IASTAssignmentExpressionNode => {
     const left = this.LogicalORExpression();
     if (
       this._lookahead == null ||
@@ -491,7 +480,7 @@ export class Parser {
 
   EqualityExpression = () => {
     return this._binaryExpression(
-      'RelationExpression',
+      this.RelationExpression,
       'EQUALITY_OPERATOR',
       'integer'
     );
@@ -499,7 +488,7 @@ export class Parser {
 
   RelationExpression = () => {
     return this._binaryExpression(
-      'AdditiveExpression',
+      this.AdditiveExpression,
       'RELATIONAL_OPERATOR',
       'integer'
     );
@@ -513,13 +502,12 @@ export class Parser {
     };
   };
 
-  _isAssignmentOperator = (tokenType: string): any => {
+  _isAssignmentOperator = (tokenType: string): boolean => {
     return tokenType === 'SIMPLE_ASSIGN' || tokenType === 'COMPLEX_ASSIGN';
   };
 
-  _checkValidAssignmentTarget = (node: any): any => {
+  _checkValidAssignmentTarget = (node: IASTNode): IASTNode => {
     if (node.type === 'Identifier' || node.type === 'MemberExpression') {
-      //this._currentFunction === Body
       return node;
     }
     throw new SyntaxError(`Invalid left-hand side in assignment expression`);
@@ -533,56 +521,62 @@ export class Parser {
   };
 
   LogicalORExpression = () => {
-    return this._logicalExpression('LogicalORKEYWORDExpression', 'LOGICAL_OR');
+    return this._logicalExpression(
+      this.LogicalORKEYWORDExpression,
+      'LOGICAL_OR'
+    );
   };
 
   LogicalORKEYWORDExpression = () => {
     return this._logicalExpression(
-      'LogicalANDExpression',
+      this.LogicalANDExpression,
       'LOGICAL_OR_KEYWORD'
     );
   };
 
   LogicalANDExpression = () => {
     return this._logicalExpression(
-      'LogicalANDKEYWORDExpression',
+      this.LogicalANDKEYWORDExpression,
       'LOGICAL_AND'
     );
   };
 
   LogicalANDKEYWORDExpression = () => {
     return this._logicalExpression(
-      'LogicalXORExpression',
+      this.LogicalXORExpression,
       'LOGICAL_AND_KEYWORD'
     );
   };
 
   LogicalXORExpression = () => {
     return this._logicalExpression(
-      'LogicalSHIFTRightExpression',
+      this.LogicalSHIFTRightExpression,
       'LOGICAL_XOR'
     );
   };
 
   LogicalSHIFTRightExpression = () => {
     return this._logicalExpression(
-      'LogicalUNSIGNEDSHIFTRightExpression',
+      this.LogicalUNSIGNEDSHIFTRightExpression,
       'LOGICAL_SIGNEDSHIFTRIGHT'
     );
   };
 
   LogicalUNSIGNEDSHIFTRightExpression = () => {
     return this._logicalExpression(
-      'EqualityExpression',
+      this.EqualityExpression,
       'LOGICAL_UNSIGNEDSHIFTRIGHT'
     );
   };
 
-  _logicalExpression = (builderName: string, operatorToken: string) => {
-    let left = (this as any)[builderName]();
+  _logicalExpression = (
+    expressionHandler: () => IASTLogicalExpressionNode,
+    operatorToken: string
+  ): IASTLogicalExpressionNode => {
+    let left: IASTLogicalExpressionNode = expressionHandler();
     while (this._lookahead != null && this._lookahead.type === operatorToken) {
       const operator = this._eat(operatorToken).value;
-      const right = (this as any)[builderName]();
+      const right = expressionHandler();
       left = {
         type: 'LogicalExpression',
         operator,
@@ -595,24 +589,27 @@ export class Parser {
 
   AdditiveExpression = () => {
     return this._binaryExpression(
-      'MultiplicativeExpression',
+      this.MultiplicativeExpression,
       'ADDITIVE_OPERATOR'
     );
   };
 
   MultiplicativeExpression = () => {
-    return this._binaryExpression('UnaryExpression', 'MULTIPLICATIVE_OPERATOR');
+    return this._binaryExpression(
+      this.UnaryExpression,
+      'MULTIPLICATIVE_OPERATOR'
+    );
   };
 
   _binaryExpression = (
-    builderName: string,
+    expressionHandler: () => IASTBinaryExpressionNode,
     operatorToken: string,
     outputType?: string
-  ) => {
-    let left: any = (this as any)[builderName]();
+  ): IASTBinaryExpressionNode => {
+    let left = expressionHandler();
     while (this._lookahead != null && this._lookahead.type === operatorToken) {
       const operator = this._eat(operatorToken).value;
-      const right = (this as any)[builderName]();
+      const right = expressionHandler();
 
       left = {
         type: 'BinaryExpression',
