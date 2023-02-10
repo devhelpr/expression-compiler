@@ -7,6 +7,9 @@
   "license": "MIT",
   "main": "./index.js",
   "types": "./index.d.ts",
+  "dependencies": {
+    "@devhelpr/markup-compiler": "^0.0.15"
+  },
   "exports": {
     ".": {
       "import": "./index.mjs",

@@ -1,5 +1,5 @@
-import { Nullable } from 'vitest';
 import { VariableType } from './variable-type';
+import { IASTTree as IASTMarkupTree } from '@devhelpr/markup-compiler';
 
 export interface IASTNode {
   type: string;
@@ -34,8 +34,8 @@ export interface IASTExpressionNode extends IASTNode {
 }
 
 export interface IASTReturnNode extends IASTNode {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  argument: any;
+  argument?: IASTAssignmentExpressionNode;
+  markupTree?: IASTMarkupTree;
 }
 
 export interface IASTValueNode extends IASTNode {
@@ -59,10 +59,15 @@ export interface IASTVariableDeclarationNode extends IASTNode {
   id: IASTIdentifierNode;
   init:
     | IASTAssignmentExpressionNode
+    | IASTMarkupNode
     | { type: string; elements: IASTAssignmentExpressionNode[] }
     | null;
   variableType?: string;
   variableSubType?: string;
+}
+
+export interface IASTMarkupNode extends IASTNode {
+  markupTree: IASTMarkupTree;
 }
 
 export interface IASTVariableStatementNode extends IASTNode {

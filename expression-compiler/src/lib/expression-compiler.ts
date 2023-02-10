@@ -6,6 +6,7 @@ import {
   CustomFunctionRegistry,
   ICustomFunctionParameter,
 } from './interfaces/custom-functions';
+import { IASTTree as IASTMarkupTree } from '@devhelpr/markup-compiler';
 
 const customFunctions: CustomFunctionRegistry = {};
 
@@ -35,8 +36,8 @@ export function registerCustomFunction(
  * @param {string}  expression - an expression to compile
  * @returns {IASTTree} An Abstract Syntax Tree
  */
-export function expressionAST(expression: string) {
-  const parser = new Parser();
+export function expressionAST(expression: string, supportsMarkup = false) {
+  const parser = new Parser(supportsMarkup);
   const ast = parser.parse(expression);
   if (!ast) {
     throw new Error('Invalid expression: parsing failed');
@@ -50,14 +51,21 @@ export function expressionAST(expression: string) {
  * @param {string}  expression - an expression to compile
  * @returns {(payload?: any) => any} A function that takes a payload and returns the result of the expression
  */
-export function compileExpression(expression: string) {
-  const parser = new Parser();
+export function compileExpression(
+  expression: string,
+  supportsMarkup = false,
+  markupCompiler?: (markup: IASTMarkupTree) => string
+) {
+  const parser = new Parser(supportsMarkup);
 
   const ast = parser.parse(expression);
   if (!ast) {
     throw new Error('Invalid expression: parsing failed');
   }
   const compiler = new Compiler();
+  if (supportsMarkup && markupCompiler) {
+    compiler.setupMarkupCompiler(markupCompiler);
+  }
   compiler.setCustomFunctionRegistry(customFunctions);
   const compileInfo = compiler.compile(ast as unknown as IASTTree);
 

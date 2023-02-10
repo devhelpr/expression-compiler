@@ -24,7 +24,7 @@ export function App() {
   const [result, setResult] = useState('');
   useEffect(() => {
     //const compiledExpression = compileExpression(`customFunction(A1:B1,A2,3)`);
-    const expression = `
+    /*const expression = `
       let list : [] = [2,24,5];
       let listCopy : [];
       list.push(25);
@@ -50,6 +50,8 @@ export function App() {
       customFunction(listCopy);
       
       sum`;
+
+    */
     /*
 
     while (loop < list.length) {
@@ -74,10 +76,23 @@ export function App() {
         }
 
       */
+
+    const expression = `function test() {
+      let component = <test>2</test>;
+      return component;
+    }
+    return test();
+    `;
     let expressionInfo: ICompiledScriptExpression | undefined = undefined;
     try {
-      console.log('AST', expressionAST(expression));
-      const compiledExpression = compileExpression(expression);
+      console.log('AST', expressionAST(expression, true));
+      const compiledExpression = compileExpression(
+        expression,
+        true,
+        (markup) => {
+          return `"markup"`;
+        }
+      );
       console.log('compiledExpression', compiledExpression);
       expressionInfo = compileExpressionAsScriptNode(
         `customFunction(a,b,c);

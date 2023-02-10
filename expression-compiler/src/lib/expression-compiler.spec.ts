@@ -95,4 +95,37 @@ describe('ExpressionCompiler', () => {
     runExpression(compiledExpression, {});
     expect(mock).toBeCalledWith('A1:B2');
   });
+
+  it('should return an ast when supportsMarkup', () => {
+    const spyMock = vi.fn();
+    const compiledExpression = compileExpression(
+      `function test() {
+      return <Markup>test</Markup>;
+    }`,
+      true,
+      (markup) => {
+        spyMock();
+        return `"markup"`;
+      }
+    );
+    expect(compiledExpression).toBeTruthy();
+    expect(spyMock).toBeCalled();
+  });
+
+  it('should return an ast when supportsMarkup and variable is initialized with markup', () => {
+    const spyMock = vi.fn();
+    const compiledExpression = compileExpression(
+      `function test() {
+        let markup = <Markup>test</Markup>;
+      return markup;
+    }`,
+      true,
+      (markup) => {
+        spyMock();
+        return `"markup"`;
+      }
+    );
+    expect(compiledExpression).toBeTruthy();
+    expect(spyMock).toBeCalled();
+  });
 });

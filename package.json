@@ -10,7 +10,8 @@
   "private": true,
   "dependencies": {
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-dom": "18.2.0",
+    "@devhelpr/markup-compiler": "^0.0.15"
   },
   "devDependencies": {
     "@nrwl/eslint-plugin-nx": "15.4.0",

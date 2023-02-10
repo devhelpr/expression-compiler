@@ -101,6 +101,15 @@ export class Tokenizer {
     this.cursor = 0;
   };
 
+  getLeftOverString = () => {
+    return this.string.slice(this.cursor);
+  };
+
+  setLeftOverString = (string: string) => {
+    this.cursor = 0;
+    this.string = string;
+  };
+
   hasMoreTokens = () => {
     return this.cursor < this.string.length;
   };

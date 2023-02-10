@@ -4,6 +4,7 @@ import {
   ICustomFunction,
 } from '../interfaces/custom-functions';
 import { Body, Identifier } from './constants';
+import { IASTTree as IASTMarkupTree } from '@devhelpr/markup-compiler';
 
 export class Compiler {
   private constantDefinitions: any = {};
@@ -17,7 +18,14 @@ export class Compiler {
   private functionReturnValtype = 'float';
 
   private customFunctions: CustomFunctionRegistry = {};
+  private markupCompiler?: (markup: IASTMarkupTree) => string;
+
   public currentFunction = '';
+  public setupMarkupCompiler = (
+    markupCompiler: (markup: IASTMarkupTree) => string
+  ) => {
+    this.markupCompiler = markupCompiler;
+  };
 
   public compile = (ast: IASTTree, values?: any) => {
     const customBindings: any = {};
@@ -547,7 +555,24 @@ export class Compiler {
               }
 
               this.codeScript += `];`;
+            } else if (
+              variableDeclaration.init &&
+              variableDeclaration.init.type === 'Markup' &&
+              variableDeclaration.init.markupTree
+            ) {
+              this.localVarablesTypeList.push('markup');
+              this.localVarablesList.push(variableDeclaration.id.name);
+
+              this.codeScript += `let local_${
+                this.localVarablesList.length - 1
+              } =`;
+              if (this.markupCompiler) {
+                this.codeScript += `${this.markupCompiler(
+                  variableDeclaration.init.markupTree
+                )};`;
+              }
             } else {
+              console.log(variableDeclaration.init);
               throw new Error('Variable initializer can only be a number.');
             }
           }
@@ -557,7 +582,11 @@ export class Compiler {
   };
 
   returnStatement = (returnStatementNode: any) => {
-    if (returnStatementNode.argument) {
+    if (returnStatementNode.markupTree && this.markupCompiler) {
+      this.codeScript += `${this.markupCompiler(
+        returnStatementNode.markupTree
+      )};`;
+    } else if (returnStatementNode.argument) {
       this.codeScript += `return `;
       this.expression(
         returnStatementNode.argument,

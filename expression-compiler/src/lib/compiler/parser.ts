@@ -10,6 +10,7 @@ import {
   IASTIfStatementNode,
   IASTLogicalExpressionNode,
   IASTMapStatementNode,
+  IASTMarkupNode,
   IASTNode,
   IASTReturnNode,
   IASTTree,
@@ -21,6 +22,10 @@ import {
 import { VariableType } from '../interfaces/variable-type';
 import { Body } from './constants';
 import { Tokenizer } from './tokenizer';
+import {
+  Parser as MarkupParser,
+  IASTTree as IASTMarkupTree,
+} from '@devhelpr/markup-compiler';
 
 export class Parser {
   _string = '';
@@ -29,7 +34,7 @@ export class Parser {
 
   _currentFunction: string = Body;
 
-  constructor() {
+  constructor(private readonly supportsMarkup = false) {
     this._string = '';
     this._tokenizer = new Tokenizer();
   }
@@ -189,12 +194,41 @@ export class Parser {
     if (this._lookahead.type === 'return') {
       this._eat('return');
     }
-    const argument = this._lookahead.type !== ';' ? this.Expression() : null;
-    this._eat(';');
+    if (
+      this.supportsMarkup &&
+      this._lookahead?.type === 'RELATIONAL_OPERATOR' &&
+      this._lookahead?.value === '<'
+    ) {
+      const parser = new MarkupParser();
+      const markup = parser.parse(
+        this._lookahead?.value + this._tokenizer?.getLeftOverString() || ''
+      );
+      const info = parser.getLeftOverAfterParsing();
+      this._tokenizer?.setLeftOverString(
+        info.lookahead?.value + info.leftOverString
+      );
+      this._lookahead = this._tokenizer?.getNextToken();
+
+      this._eat(';');
+      if (markup) {
+        return {
+          type: 'ReturnStatement',
+          markupTree: markup,
+        };
+      }
+    } else {
+      const argument =
+        this._lookahead.type !== ';' ? this.Expression() : undefined;
+      this._eat(';');
+      if (argument) {
+        return {
+          type: 'ReturnStatement',
+          argument,
+        };
+      }
+    }
     return {
       type: 'ReturnStatement',
-      argument,
-      //returnType: getValtype(valType),
     };
   };
 
@@ -424,6 +458,27 @@ export class Parser {
       this._eat(']');
       return { type: 'array', elements };
     } else {
+      if (
+        this.supportsMarkup &&
+        this._lookahead?.type === 'RELATIONAL_OPERATOR' &&
+        this._lookahead?.value === '<'
+      ) {
+        const parser = new MarkupParser();
+        const markup = parser.parse(
+          this._lookahead?.value + this._tokenizer?.getLeftOverString() || ''
+        );
+        const info = parser.getLeftOverAfterParsing();
+        this._tokenizer?.setLeftOverString(
+          info.lookahead?.value + info.leftOverString
+        );
+        this._lookahead = this._tokenizer?.getNextToken();
+        if (markup) {
+          return {
+            type: 'Markup',
+            markupTree: markup as unknown as IASTMarkupTree,
+          } as IASTMarkupNode;
+        }
+      }
       return this.AssignmentExpression();
     }
   };
