@@ -46,4 +46,7 @@ function Component() {
     return test;
 }
 .. after parsing the inital tree.. walk through the AST and for each markup search for expressions and compile these...
-.. should be handled by the compiler later on
+.. should then be handled by the compiler later on?
+.. other idea.. compile the expression when parsing the markup ... add the code to the generated code for the markup...  then execute the code when running the expression
+    .. optimalization : if the expression is static.. run it immediately
+

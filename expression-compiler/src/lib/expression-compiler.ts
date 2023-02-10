@@ -56,6 +56,24 @@ export function compileExpression(
   supportsMarkup = false,
   markupCompiler?: (markup: IASTMarkupTree) => string
 ) {
+  const compileInfo = compileExpressionAsInfo(
+    expression,
+    supportsMarkup,
+    markupCompiler
+  );
+
+  return (
+    new Function('payload', `${compileInfo.script}`) as unknown as (
+      payload?: any
+    ) => any
+  ).bind(compileInfo.bindings);
+}
+
+export function compileExpressionAsInfo(
+  expression: string,
+  supportsMarkup = false,
+  markupCompiler?: (markup: IASTMarkupTree) => string
+) {
   const parser = new Parser(supportsMarkup);
 
   const ast = parser.parse(expression);
@@ -69,11 +87,7 @@ export function compileExpression(
   compiler.setCustomFunctionRegistry(customFunctions);
   const compileInfo = compiler.compile(ast as unknown as IASTTree);
 
-  return (
-    new Function('payload', `${compileInfo.script}`) as unknown as (
-      payload?: any
-    ) => any
-  ).bind(compileInfo.bindings);
+  return compileInfo;
 }
 
 export interface ICompiledScriptExpression {
