@@ -3,6 +3,7 @@ import {
   IASTBinaryExpressionNode,
   IASTBlockNode,
   IASTConstantNode,
+  IASTCustomBlockNode,
   IASTExpressionNode,
   IASTFilterStatementNode,
   IASTForEachStatementNode,
@@ -33,11 +34,16 @@ export class Parser {
   _lookahead: any = null;
 
   _currentFunction: string = Body;
+  customBlocks: any = {};
 
   constructor(private readonly supportsMarkup = false) {
     this._string = '';
     this._tokenizer = new Tokenizer();
   }
+
+  public setCustomBlockRegistry = (customBlocks: any) => {
+    this.customBlocks = customBlocks;
+  };
 
   parse = (expression: string): IASTTree | false => {
     this._string = expression;
@@ -79,34 +85,42 @@ export class Parser {
       return null;
     }
 
-    switch (this._lookahead.type) {
-      case ';':
-        return this.EmptyStatement();
-      case '{':
-        return this.BlockStatement();
-      case 'let':
-        return this.VariableStatement();
-      case 'function':
-        return this.FunctionDeclaration();
-      case 'return':
-        return this.ReturnStatement();
+    if (
+      this._lookahead.type === 'IDENTIFIER' &&
+      this.customBlocks[this._lookahead.value]
+    ) {
+      return this.customBlockStatement();
+    } else {
+      switch (this._lookahead.type) {
+        case ';':
+          return this.EmptyStatement();
+        case '{':
+          return this.BlockStatement();
+        case 'let':
+          return this.VariableStatement();
+        case 'function':
+          return this.FunctionDeclaration();
+        case 'return':
+          return this.ReturnStatement();
 
-      case 'constant':
-        return this.ConstantStatement();
-      case 'if':
-        return this.IfStatement();
-      case 'while':
-      case 'do':
-      case 'for':
-        return this.IterationStatement();
-      case 'forEach':
-        return this.ForEachStatement();
-      case 'map':
-        return this.MapStatement();
-      case 'filter':
-        return this.FilterStatement();
-      default:
-        return this.ExpressionStatement();
+        case 'constant':
+          return this.ConstantStatement();
+        case 'if':
+          return this.IfStatement();
+        case 'while':
+        case 'do':
+        case 'for':
+          return this.IterationStatement();
+        case 'forEach':
+          return this.ForEachStatement();
+        case 'map':
+          return this.MapStatement();
+        case 'filter':
+          return this.FilterStatement();
+
+        default:
+          return this.ExpressionStatement();
+      }
     }
   };
 
@@ -498,6 +512,23 @@ export class Parser {
       type: 'BlockStatement',
       body,
     };
+  };
+
+  customBlockStatement = (): IASTCustomBlockNode => {
+    console.log('customBlockStatement');
+    const blockName = this._eat('IDENTIFIER').value;
+    if (this.customBlocks[blockName]) {
+      this._eat('{');
+      const body = this._lookahead.type !== '}' ? this.StatementList('}') : [];
+      this._eat('}');
+      return {
+        type: 'CustomBlockStatement',
+        body,
+        name: blockName,
+      };
+    } else {
+      throw new Error(`Custom block ${blockName} not found`);
+    }
   };
 
   ExpressionStatement = (): IASTExpressionNode => {

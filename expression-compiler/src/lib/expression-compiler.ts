@@ -9,6 +9,7 @@ import {
 import { IASTTree as IASTMarkupTree } from '@devhelpr/markup-compiler';
 
 const customFunctions: CustomFunctionRegistry = {};
+const customBlocks: any = {};
 
 /**
  * Registers a custom function that can be used in expressions
@@ -30,6 +31,35 @@ export function registerCustomFunction(
   };
 }
 
+export function unregisterCustomFunction(functionName: string) {
+  if (customFunctions[functionName]) {
+    delete customFunctions[functionName];
+  }
+}
+
+/**
+ * Registers a custom block that can be defined in code and called from the outside
+ * @param {string}  blockName - a name of a custom block to register
+ * @returns {CustomBlockFunction}
+ */
+export function registerCustomBlock(blockName: string) {
+  const blockFunction = () => {
+    //
+  };
+  customBlocks[blockName] = {
+    blockFunction,
+
+    // when compiling and block is found... register the block with this custom block
+  };
+  return blockFunction;
+}
+
+export function unregisterCustomBlock(blockName: string) {
+  if (customBlocks[blockName]) {
+    delete customBlocks[blockName];
+  }
+}
+
 /**
  * Parses an expression and returns the Abstract Syntax Tree
  *
@@ -38,6 +68,7 @@ export function registerCustomFunction(
  */
 export function expressionAST(expression: string, supportsMarkup = false) {
   const parser = new Parser(supportsMarkup);
+  parser.setCustomBlockRegistry(customBlocks);
   const ast = parser.parse(expression);
   if (!ast) {
     throw new Error('Invalid expression: parsing failed');
@@ -75,7 +106,7 @@ export function compileExpressionAsInfo(
   markupCompiler?: (markup: IASTMarkupTree) => string
 ) {
   const parser = new Parser(supportsMarkup);
-
+  parser.setCustomBlockRegistry(customBlocks);
   const ast = parser.parse(expression);
   if (!ast) {
     throw new Error('Invalid expression: parsing failed');
@@ -84,6 +115,7 @@ export function compileExpressionAsInfo(
   if (supportsMarkup && markupCompiler) {
     compiler.setupMarkupCompiler(markupCompiler);
   }
+  compiler.setCustomBlockRegistry(customBlocks);
   compiler.setCustomFunctionRegistry(customFunctions);
   const compileInfo = compiler.compile(ast as unknown as IASTTree);
 
@@ -105,12 +137,13 @@ export function compileExpressionAsScriptNode(
   expression: string
 ): ICompiledScriptExpression {
   const parser = new Parser();
-
+  parser.setCustomBlockRegistry(customBlocks);
   const ast = parser.parse(expression);
   if (!ast) {
     throw new Error('Invalid expression: parsing failed');
   }
   const compiler = new Compiler();
+  compiler.setCustomBlockRegistry(customBlocks);
   compiler.setCustomFunctionRegistry(customFunctions);
   const compileInfo = compiler.compile(ast as unknown as IASTTree);
   const id = crypto.randomUUID().replace(new RegExp('-', 'g'), '');

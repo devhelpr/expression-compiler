@@ -18,6 +18,9 @@ export class Compiler {
   private functionReturnValtype = 'float';
 
   private customFunctions: CustomFunctionRegistry = {};
+  private customBlocks: any = {};
+  private hasCustomBlocks = false;
+
   private markupCompiler?: (markup: IASTMarkupTree) => string;
 
   public currentFunction = '';
@@ -46,8 +49,11 @@ export class Compiler {
     this.customFunctions = customFunctions;
   };
 
+  public setCustomBlockRegistry = (customBlocks: any) => {
+    this.customBlocks = customBlocks;
+  };
+
   mainProgram = (astNode: IASTTree) => {
-    //console.log('astNode', astNode);
     if (astNode && astNode.body && astNode.type === 'Program') {
       astNode.body.forEach((statementNode: any, index: number) => {
         if (
@@ -58,6 +64,20 @@ export class Compiler {
         }
         this.statement(statementNode, true);
       });
+
+      if (this.hasCustomBlocks) {
+        this.codeScript += `return {`;
+
+        Object.keys(this.customBlocks).forEach((key, index) => {
+          if (index > 0) {
+            this.codeScript += `,`;
+          }
+          const customBlock = this.customBlocks[key];
+          this.codeScript += `${key}: ${customBlock.functionName}`;
+        });
+
+        this.codeScript += `};`;
+      }
     }
   };
 
@@ -70,6 +90,9 @@ export class Compiler {
       switch (statementNode.type) {
         case 'BlockStatement':
           this.blockStatement(statementNode);
+          break;
+        case 'CustomBlockStatement':
+          this.customBlockStatement(statementNode);
           break;
         case 'ExpressionStatement':
           this.expressionStatement(statementNode);
@@ -119,6 +142,53 @@ export class Compiler {
       blockStatementNode.body.forEach((statementNode: any) => {
         this.statement(statementNode, false);
       });
+    }
+  };
+
+  customBlockStatement = (blockStatementNode: any) => {
+    if (blockStatementNode && blockStatementNode.body) {
+      this.hasCustomBlocks = true;
+
+      const storeCode = this.codeScript;
+      const storeLocalVariables = [...this.localVarablesList];
+      const storeLocalVarablesTypeList = [...this.localVarablesTypeList];
+
+      this.codeScript = `function block_${blockStatementNode.name} (payload){`;
+
+      this.currentFunction = `block_${blockStatementNode.name}`;
+      if (this.customBlocks[blockStatementNode.name]) {
+        this.customBlocks[
+          blockStatementNode.name
+        ].functionName = `block_${blockStatementNode.name}`;
+      }
+      this.localVarablesList = [...this.localVarablesList];
+      this.localVarablesTypeList = [...this.localVarablesTypeList];
+
+      blockStatementNode.body.forEach((statementNode: any) => {
+        this.statement(statementNode, false);
+      });
+
+      this.codeScript += `};`;
+      const customBlockCodeScript = this.codeScript;
+
+      // this.functionCode.push({
+      //   name: functionDeclarationNode.name.name,
+      //   code: this.codeScript,
+      //   paramCount: functionDeclarationNode.params.length,
+      //   params: [...functionDeclarationNode.params],
+      //   localVarablesList: [...this.localVarablesList],
+      //   localVarablesTypeList: [...this.localVarablesTypeList],
+      //   valType: this.functionReturnValtype,
+      // });
+
+      this.codeScript = storeCode;
+
+      this.codeScript += customBlockCodeScript;
+
+      this.localVarablesList = storeLocalVariables;
+      this.localVarablesTypeList = storeLocalVarablesTypeList;
+
+      this.currentFunction = Body;
     }
   };
 

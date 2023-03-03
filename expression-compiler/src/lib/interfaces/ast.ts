@@ -7,6 +7,12 @@ export interface IASTNode {
 export interface IASTBlockNode extends IASTNode {
   body: IASTNode[];
 }
+
+export interface IASTCustomBlockNode extends IASTNode {
+  name: string;
+  body: IASTNode[];
+}
+
 export interface IASTIdentifierNode extends IASTNode {
   name: string;
 }

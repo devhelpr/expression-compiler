@@ -1,5 +1,7 @@
 import {
   compileExpression,
+  expressionAST,
+  registerCustomBlock,
   registerCustomFunction,
   runExpression,
 } from './expression-compiler';
@@ -127,5 +129,37 @@ describe('ExpressionCompiler', () => {
     );
     expect(compiledExpression).toBeTruthy();
     expect(spyMock).toBeCalled();
+  });
+
+  it('should have a custom block in the AST when customBlock is provided', () => {
+    registerCustomBlock('customBlock');
+    const ast = expressionAST(
+      `
+    customBlock {
+      return 42;
+    }`,
+      false
+    );
+    console.log('ast', ast);
+    expect(ast).toBeTruthy();
+  });
+
+  it('should call custom block when customBlock is provided', () => {
+    registerCustomBlock('customBlock');
+    const compiledExpression = compileExpression(
+      `
+      let a = 42;
+      customBlock {
+        let b = 5;
+        a = a + b;
+        a = a + c;
+        return a;
+      }
+    `
+    );
+    const result = runExpression(compiledExpression, {});
+    console.log(result);
+    const blockResult = result.customBlock({ c: 6 });
+    expect(blockResult).toBe(53);
   });
 });
