@@ -85,35 +85,35 @@ export function App() {
     `;
     let expressionInfo: ICompiledScriptExpression | undefined = undefined;
     try {
-      console.log('AST', expressionAST(expression, true));
-      const compiledExpression = compileExpression(
-        expression,
-        true,
-        (markup) => {
-          return `"markup"`;
-        }
-      );
-      console.log('compiledExpression', compiledExpression);
-      expressionInfo = compileExpressionAsScriptNode(
-        `customFunction(a,b,c);
-      return sum(payload, "A1:B2")+sum(payload, "Column:B")+sum(payload, "Row:1")+a+b+c;
-    `
-      );
-      console.log(
-        'expressionInfo.expressionFunction',
-        expressionInfo.expressionFunction({
-          a: 1,
-          b: 2,
-          c: 3,
-        })
-      );
-      setResultScript(
-        expressionInfo.expressionFunction({
-          a: 1,
-          b: 2,
-          c: 3,
-        })
-      );
+    //   console.log('AST', expressionAST(expression, true));
+    //   const compiledExpression = compileExpression(
+    //     expression,
+    //     true,
+    //     (markup) => {
+    //       return `"markup"`;
+    //     }
+    //   );
+    //   console.log('compiledExpression', compiledExpression);
+    //   expressionInfo = compileExpressionAsScriptNode(
+    //     `customFunction(a,b,c);
+    //   return sum(payload, "A1:B2")+sum(payload, "Column:B")+sum(payload, "Row:1")+a+b+c;
+    // `
+    //   );
+    //   console.log(
+    //     'expressionInfo.expressionFunction',
+    //     expressionInfo.expressionFunction({
+    //       a: 1,
+    //       b: 2,
+    //       c: 3,
+    //     })
+    //   );
+    //   setResultScript(
+    //     expressionInfo.expressionFunction({
+    //       a: 1,
+    //       b: 2,
+    //       c: 3,
+    //     })
+    //   );
 
       /*let loop=0;
   let test = "test";
@@ -146,6 +146,7 @@ export function App() {
     payload.a + payload.b
 
   */
+ const compiledExpression = compileExpression(`sum() * 4`);
       setResult(
         runExpression(compiledExpression, {
           a: 2,
@@ -155,6 +156,9 @@ export function App() {
     } catch (e) {
       setResult(e as unknown as string);
     }
+
+    // const test = compileExpression(`sum() * 4`);
+    // console.log('test', runExpression(test,{}));
     return () => {
       if (expressionInfo) {
         deleteExpressionScriptNode(expressionInfo.id);

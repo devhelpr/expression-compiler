@@ -32,7 +32,7 @@
       "executor": "@nrwl/vite:test",
       "outputs": ["{projectRoot}/coverage"],
       "options": {
-        "passWithNoTests": true
+        "passWithNoTests": false
       }
     }
   }

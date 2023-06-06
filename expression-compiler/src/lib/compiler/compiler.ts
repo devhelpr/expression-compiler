@@ -231,7 +231,7 @@ export class Compiler {
     }
   };
 
-  expression = (expression: any, valType: string) => {
+  expression = (expression: any, valType: string, isLeft? : boolean) => {
     switch (expression.type) {
       case 'RangeLiteral':
         this.rangeLiteral(expression.value);
@@ -273,7 +273,9 @@ export class Compiler {
       }
       case 'CallExpression': {
         this.callExpression(expression);
-        this.codeScript += `;`;
+        if (!isLeft) {
+          this.codeScript += `;`;
+        }
         break;
       }
       case 'UnaryExpression':
@@ -406,7 +408,7 @@ export class Compiler {
   };
 
   logicalExpression = (expression: any, valType: string) => {
-    this.expression(expression.left, valType);
+    this.expression(expression.left, valType, true);
 
     let useValType = 'float';
     const outputType =
@@ -443,7 +445,7 @@ export class Compiler {
   };
 
   binaryExpression = (expression: any, valType: string) => {
-    this.expression(expression.left, valType);
+    this.expression(expression.left, valType, true);
 
     if (expression.operator === '%' && valType === 'float') {
       throw new Error(

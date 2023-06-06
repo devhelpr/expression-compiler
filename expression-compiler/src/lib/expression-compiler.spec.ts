@@ -75,6 +75,20 @@ describe('ExpressionCompiler', () => {
     expect(mock).toBeCalledWith(1, 2);
   });
 
+  it('should custom function be called with parameters and can result be multiplied', () => {
+    const mock = vi.fn();
+    registerCustomFunction('customFunction', [], (a: number, b: number) => {
+      mock(a, b);
+      return a + b;
+    });
+
+    const compiledExpression = compileExpression('customFunction(1, 2) * 4');
+    const result = runExpression(compiledExpression, {});
+    expect(result).toBe(12);
+    expect(mock).toBeCalledWith(1, 2);
+    console.log('customFunction(1,2) * 4', result);	
+  });
+
   it('should return a string', () => {
     const compiledExpression = compileExpression('"Hello World"');
     const result = runExpression(compiledExpression, {});
