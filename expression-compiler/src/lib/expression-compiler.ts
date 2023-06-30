@@ -1,3 +1,4 @@
+import { p } from 'vitest/dist/index-5aad25c1';
 import { Compiler } from './compiler/compiler';
 import { Parser } from './compiler/parser';
 import { IASTTree } from './interfaces/ast';
@@ -182,6 +183,23 @@ export function deleteExpressionScriptNode(id: string) {
   }
 }
 
+export function isPayloadValid(payload: any, payloadProperties?: string[]) {
+  // TODO : add support for nested properties
+  let result = {
+    result: true,
+    error: '',
+  };
+  payloadProperties?.forEach((property) => {
+    if (payload[property] === undefined) {
+      result = {
+        result: false,
+        error: `Unknown variable ${property} `,
+      };
+    }
+  });
+  return result;
+}
+
 /**
  * Runs a compiled expression
  *
@@ -191,8 +209,16 @@ export function deleteExpressionScriptNode(id: string) {
  */
 export function runExpression(
   compiledExpression: (payload?: any) => any,
-  payload: unknown
+  payload: unknown,
+  validatePayload = false,
+  payloadProperties?: string[]
 ) {
+  if (validatePayload) {
+    const result = isPayloadValid(payload, payloadProperties);
+    if (!result.result) {
+      throw new Error(result.error);
+    }
+  }
   return compiledExpression(payload);
 }
 

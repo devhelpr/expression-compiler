@@ -1,5 +1,6 @@
 import {
   compileExpression,
+  compileExpressionAsInfo,
   expressionAST,
   registerCustomBlock,
   registerCustomFunction,
@@ -86,7 +87,7 @@ describe('ExpressionCompiler', () => {
     const result = runExpression(compiledExpression, {});
     expect(result).toBe(12);
     expect(mock).toBeCalledWith(1, 2);
-    console.log('customFunction(1,2) * 4', result);	
+    console.log('customFunction(1,2) * 4', result);
   });
 
   it('should return a string', () => {
@@ -175,5 +176,23 @@ describe('ExpressionCompiler', () => {
     console.log(result);
     const blockResult = result.customBlock({ c: 6 });
     expect(blockResult).toBe(53);
+  });
+
+  it("should throw error if variable in expression doesn't exist in payload", () => {
+    const compiledExpressionInfo = compileExpressionAsInfo(`test`);
+    const expressionFunction = (
+      new Function(
+        'payload',
+        `${compiledExpressionInfo.script}`
+      ) as unknown as (payload?: any) => any
+    ).bind(compiledExpressionInfo.bindings);
+    expect(() =>
+      runExpression(
+        expressionFunction,
+        {},
+        true,
+        compiledExpressionInfo.payloadProperties
+      )
+    ).toThrowError('Unknown variable test');
   });
 });

@@ -23,6 +23,8 @@ export class Compiler {
 
   private markupCompiler?: (markup: IASTMarkupTree) => string;
 
+  private payloadProperties: string[] = [];
+
   public currentFunction = '';
   public setupMarkupCompiler = (
     markupCompiler: (markup: IASTMarkupTree) => string
@@ -40,7 +42,11 @@ export class Compiler {
 
     this.mainProgram(ast);
     //console.log('codeScript', this.codeScript);
-    return { script: this.codeScript, bindings: customBindings };
+    return {
+      script: this.codeScript,
+      bindings: customBindings,
+      payloadProperties: this.payloadProperties,
+    };
   };
 
   public setCustomFunctionRegistry = (
@@ -231,7 +237,7 @@ export class Compiler {
     }
   };
 
-  expression = (expression: any, valType: string, isLeft? : boolean) => {
+  expression = (expression: any, valType: string, isLeft?: boolean) => {
     switch (expression.type) {
       case 'RangeLiteral':
         this.rangeLiteral(expression.value);
@@ -400,6 +406,7 @@ export class Compiler {
           this.codeScript += `local_${variableIndex}`;
         }
       } else {
+        this.payloadProperties.push(expression.name);
         this.codeScript += `payload.${expression.name}`;
       }
     } else {
@@ -527,6 +534,9 @@ export class Compiler {
             this.codeScript += `local_${localVariableIndex}.${expressionNode.property.name}`;
           }
         } else {
+          this.payloadProperties.push(
+            `${expressionNode.object.name}.${expressionNode.property.name}`
+          );
           this.codeScript += `payload.${expressionNode.object.name}.${expressionNode.property.name}`;
         }
       } else if (
@@ -539,6 +549,9 @@ export class Compiler {
         if (localVariableIndex >= 0) {
           this.codeScript += `local_${localVariableIndex}[${expressionNode.property.value}]`;
         } else {
+          this.payloadProperties.push(
+            `${expressionNode.object.name}.${expressionNode.property.name}`
+          );
           this.codeScript += `payload.${expressionNode.object.name}[${expressionNode.property.value}]`;
         }
       } else {
