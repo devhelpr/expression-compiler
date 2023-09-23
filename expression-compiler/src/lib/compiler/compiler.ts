@@ -435,6 +435,22 @@ export class Compiler {
     // TODO : xor .. shl .. shr .. rot etc..
   };
 
+  unaryExpressionAsString = (expression: any, valType: string) => {
+    if (expression.operator === '-') {
+      if (expression.argument && expression.argument.type === 'NumberLiteral') {
+        if (valType === 'integer') {
+          return `-${expression.argument.value | 0}`;
+        } else {
+          return `-${expression.argument.value}`;
+        }
+      }
+    } else {
+      throw new Error(
+        `UnaryExpression "${expression.operator}" cannot be handled`
+      );
+    }
+  };
+
   unaryExpression = (expression: any, valType: string) => {
     if (expression.operator === '-') {
       if (expression.argument && expression.argument.type === 'NumberLiteral') {
@@ -500,6 +516,11 @@ export class Compiler {
       this.expression(expressionNode.object, '');
       if (
         expressionNode.property &&
+        expressionNode.property.type === 'UnaryExpression'
+      ) {
+        this.codeScript += this.unaryExpression(expressionNode.property, '');
+      } else if (
+        expressionNode.property &&
         expressionNode.property.type === 'Identifier'
       ) {
         this.codeScript += `.${expressionNode.property.name}`;
@@ -514,6 +535,33 @@ export class Compiler {
     ) {
       if (
         expressionNode.property &&
+        expressionNode.property.type === 'UnaryExpression'
+      ) {
+        const localVariableIndex = this.localVarablesList.indexOf(
+          expressionNode.object.name
+        );
+        if (localVariableIndex >= 0) {
+          const variableType = this.localVarablesTypeList[localVariableIndex];
+          if (variableType === 'array') {
+            this.codeScript += `local_${localVariableIndex}.at(${this.unaryExpressionAsString(
+              expressionNode.property,
+              ''
+            )})`;
+          } else {
+            throw new Error(
+              'UnaryExpression not supported for non array types'
+            );
+          }
+        } else {
+          // TODO : add to payloadProperties for payload validation
+          const helper = `${this.unaryExpressionAsString(
+            expressionNode.property,
+            ''
+          )}`;
+          this.codeScript += `Array.isArray(payload.${expressionNode.object.name}) ? payload.${expressionNode.object.name}.at(${helper}) : payload.${expressionNode.object.name}[${helper}]`;
+        }
+      } else if (
+        expressionNode.property &&
         expressionNode.property.type === 'Identifier'
       ) {
         const localVariableIndex = this.localVarablesList.indexOf(
@@ -526,7 +574,7 @@ export class Compiler {
               expressionNode.property.name
             );
             if (propertyNameVariableIndex >= 0) {
-              this.codeScript += `local_${localVariableIndex}[local_${propertyNameVariableIndex}]`;
+              this.codeScript += `local_${localVariableIndex}.at(local_${propertyNameVariableIndex})`;
             } else {
               this.codeScript += `local_${localVariableIndex}.${expressionNode.property.name}`;
             }
@@ -549,6 +597,7 @@ export class Compiler {
         if (localVariableIndex >= 0) {
           this.codeScript += `local_${localVariableIndex}[${expressionNode.property.value}]`;
         } else {
+          // TODO : fix this to work with arrays..
           this.payloadProperties.push(
             `${expressionNode.object.name}.${expressionNode.property.name}`
           );

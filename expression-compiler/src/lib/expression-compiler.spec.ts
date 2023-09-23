@@ -38,6 +38,42 @@ describe('ExpressionCompiler', () => {
     expect(result).toBe(9);
   });
 
+  it('should return array values', () => {
+    const payload = {
+      a: [1, 2, 3],
+    };
+    const compiledExpression = compileExpression('a[0] + a[1] + a[2]');
+    const result = runExpression(compiledExpression, payload);
+    expect(result).toBe(6);
+  });
+
+  it('should return last array value', () => {
+    const payload = {
+      a: [1, 2, 3],
+    };
+    const compiledExpression2 = compileExpression('a[-1]');
+    console.log('compiledExpression2', compiledExpression2);
+    const result2 = runExpression(compiledExpression2, payload);
+    expect(result2).toBe(3);
+
+    // const compiledExpressionInfo =
+    //   compileExpressionAsInfo('a[0] + a[1] + a[2]');
+    // const expressionFunction = (
+    //   new Function(
+    //     'payload',
+    //     `${compiledExpressionInfo.script}`
+    //   ) as unknown as (payload?: any) => any
+    // ).bind(compiledExpressionInfo.bindings);
+    // expect(() =>
+    //   runExpression(
+    //     expressionFunction,
+    //     payload,
+    //     false,
+    //     compiledExpressionInfo.payloadProperties
+    //   )
+    // ).toBe(6);
+  });
+
   it('should return true as result of if condition', () => {
     const compiledExpression = compileExpression(
       'if (20*3 > 20) {return true;} else {return false;}'

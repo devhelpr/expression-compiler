@@ -1,4 +1,3 @@
-import { p } from 'vitest/dist/index-5aad25c1';
 import { Compiler } from './compiler/compiler';
 import { Parser } from './compiler/parser';
 import { IASTTree } from './interfaces/ast';

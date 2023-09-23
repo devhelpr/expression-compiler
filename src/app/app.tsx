@@ -85,35 +85,35 @@ export function App() {
     `;
     let expressionInfo: ICompiledScriptExpression | undefined = undefined;
     try {
-    //   console.log('AST', expressionAST(expression, true));
-    //   const compiledExpression = compileExpression(
-    //     expression,
-    //     true,
-    //     (markup) => {
-    //       return `"markup"`;
-    //     }
-    //   );
-    //   console.log('compiledExpression', compiledExpression);
-    //   expressionInfo = compileExpressionAsScriptNode(
-    //     `customFunction(a,b,c);
-    //   return sum(payload, "A1:B2")+sum(payload, "Column:B")+sum(payload, "Row:1")+a+b+c;
-    // `
-    //   );
-    //   console.log(
-    //     'expressionInfo.expressionFunction',
-    //     expressionInfo.expressionFunction({
-    //       a: 1,
-    //       b: 2,
-    //       c: 3,
-    //     })
-    //   );
-    //   setResultScript(
-    //     expressionInfo.expressionFunction({
-    //       a: 1,
-    //       b: 2,
-    //       c: 3,
-    //     })
-    //   );
+      //   console.log('AST', expressionAST(expression, true));
+      //   const compiledExpression = compileExpression(
+      //     expression,
+      //     true,
+      //     (markup) => {
+      //       return `"markup"`;
+      //     }
+      //   );
+      //   console.log('compiledExpression', compiledExpression);
+      //   expressionInfo = compileExpressionAsScriptNode(
+      //     `customFunction(a,b,c);
+      //   return sum(payload, "A1:B2")+sum(payload, "Column:B")+sum(payload, "Row:1")+a+b+c;
+      // `
+      //   );
+      //   console.log(
+      //     'expressionInfo.expressionFunction',
+      //     expressionInfo.expressionFunction({
+      //       a: 1,
+      //       b: 2,
+      //       c: 3,
+      //     })
+      //   );
+      //   setResultScript(
+      //     expressionInfo.expressionFunction({
+      //       a: 1,
+      //       b: 2,
+      //       c: 3,
+      //     })
+      //   );
 
       /*let loop=0;
   let test = "test";
@@ -146,11 +146,14 @@ export function App() {
     payload.a + payload.b
 
   */
- const compiledExpression = compileExpression(`sum() * 4`);
+      //const compiledExpression = compileExpression(`sum() * 4`);
+
+      const compiledExpression = compileExpression(`arr[-1]`);
       setResult(
         runExpression(compiledExpression, {
           a: 2,
           b: { x: { y: { abc: 10 } } },
+          arr: [0, 1, 2],
         })
       );
     } catch (e) {
