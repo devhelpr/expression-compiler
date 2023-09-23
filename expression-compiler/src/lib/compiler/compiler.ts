@@ -558,7 +558,7 @@ export class Compiler {
             expressionNode.property,
             ''
           )}`;
-          this.codeScript += `Array.isArray(payload.${expressionNode.object.name}) ? payload.${expressionNode.object.name}.at(${helper}) : payload.${expressionNode.object.name}[${helper}]`;
+          this.codeScript += `(Array.isArray(payload.${expressionNode.object.name}) ? payload.${expressionNode.object.name}.at(${helper}) : payload.${expressionNode.object.name}[${helper}])`;
         }
       } else if (
         expressionNode.property &&
