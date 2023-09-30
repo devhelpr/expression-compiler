@@ -92,7 +92,6 @@ export function compileExpression(
     supportsMarkup,
     markupCompiler
   );
-
   return (
     new Function('payload', `${compileInfo.script}`) as unknown as (
       payload?: any

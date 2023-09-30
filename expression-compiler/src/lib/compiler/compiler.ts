@@ -517,7 +517,6 @@ export class Compiler {
   };
 
   memberExpression = (expressionNode: any) => {
-    console.log('memberExpression', expressionNode);
     if (
       expressionNode.object &&
       expressionNode.object.type === 'MemberExpression'
@@ -626,7 +625,7 @@ export class Compiler {
           this.payloadProperties.push(
             `${expressionNode.object.name}.${expressionNode.property.name}`
           );
-          this.codeScript += `payload.${expressionNode.object.name}.${expressionNode.property.name}`;
+          this.codeScript += `(Array.isArray(payload.${expressionNode.object.name}) ? payload.${expressionNode.object.name}.at(payload.${expressionNode.property.name}) : payload.${expressionNode.object.name}[payload.${expressionNode.property.name}])`;
         }
       } else if (
         expressionNode.property &&
@@ -720,7 +719,6 @@ export class Compiler {
               if (variableDeclaration.init) {
                 variableDeclaration.init.elements.forEach(
                   (element: any, index: number) => {
-                    console.log(element);
                     this.expression(element, '');
                     if (index < variableDeclaration.init.elements.length - 1) {
                       this.codeScript += `,`;

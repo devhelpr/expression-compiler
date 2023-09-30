@@ -85,6 +85,17 @@ describe('ExpressionCompiler', () => {
     expect(result2).toBe(3);
   });
 
+  it('should return value true when arr[index] < arr[index+1]', () => {
+    const payload = {
+      a: [1, 2, 3],
+      index: 1,
+    };
+    const compiledExpression2 = compileExpression('a[index] < a[index+1]');
+    console.log('compiledExpression2', compiledExpression2);
+    const result2 = runExpression(compiledExpression2, payload);
+    expect(result2).toBe(true);
+  });
+
   it('should return true as result of if condition', () => {
     const compiledExpression = compileExpression(
       'if (20*3 > 20) {return true;} else {return false;}'
