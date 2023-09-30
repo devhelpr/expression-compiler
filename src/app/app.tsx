@@ -149,14 +149,15 @@ export function App() {
       //const compiledExpression = compileExpression(`sum() * 4`);
 
       const compiledExpression = compileExpression(
-        `arr[index] < arr[index + 1]`
+        //`arr[index] < arr[index + 1]`
+        `arr.length`
       );
       console.log('compiledExpression', compiledExpression);
       setResult(
         runExpression(compiledExpression, {
           a: 2,
           b: { x: { y: { abc: 10 } } },
-          arr: [0, 1, 2],
+          arr: [0, 1, 2, 3],
           index: 1,
         })
       );

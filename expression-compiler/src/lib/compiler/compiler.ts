@@ -625,7 +625,11 @@ export class Compiler {
           this.payloadProperties.push(
             `${expressionNode.object.name}.${expressionNode.property.name}`
           );
-          this.codeScript += `(Array.isArray(payload.${expressionNode.object.name}) ? payload.${expressionNode.object.name}.at(payload.${expressionNode.property.name}) : payload.${expressionNode.object.name}[payload.${expressionNode.property.name}])`;
+          if (expressionNode.property.name === 'length') {
+            this.codeScript += `payload.${expressionNode.object.name}.${expressionNode.property.name}`;
+          } else {
+            this.codeScript += `(Array.isArray(payload.${expressionNode.object.name}) ? payload.${expressionNode.object.name}.at(payload.${expressionNode.property.name}) : payload.${expressionNode.object.name}[payload.${expressionNode.property.name}])`;
+          }
         }
       } else if (
         expressionNode.property &&
@@ -638,6 +642,7 @@ export class Compiler {
           this.codeScript += `local_${localVariableIndex}[${expressionNode.property.value}]`;
         } else {
           // TODO : fix this to work with arrays..
+
           this.payloadProperties.push(
             `${expressionNode.object.name}.${expressionNode.property.name}`
           );

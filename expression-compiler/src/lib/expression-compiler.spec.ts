@@ -96,6 +96,17 @@ describe('ExpressionCompiler', () => {
     expect(result2).toBe(true);
   });
 
+  it('should return correctarray length', () => {
+    const payload = {
+      a: [1, 2, 3, 4, 5],
+      index: 1,
+    };
+    const compiledExpression2 = compileExpression('a.length');
+    console.log('compiledExpression2', compiledExpression2);
+    const result2 = runExpression(compiledExpression2, payload);
+    expect(result2).toBe(5);
+  });
+
   it('should return true as result of if condition', () => {
     const compiledExpression = compileExpression(
       'if (20*3 > 20) {return true;} else {return false;}'
