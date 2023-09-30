@@ -83,7 +83,7 @@ export function App() {
     }
     return test();
     `;
-    let expressionInfo: ICompiledScriptExpression | undefined = undefined;
+    const expressionInfo: ICompiledScriptExpression | undefined = undefined;
     try {
       //   console.log('AST', expressionAST(expression, true));
       //   const compiledExpression = compileExpression(
@@ -148,12 +148,13 @@ export function App() {
   */
       //const compiledExpression = compileExpression(`sum() * 4`);
 
-      const compiledExpression = compileExpression(`arr[-1]`);
+      const compiledExpression = compileExpression(`arr[index + 1]`);
       setResult(
         runExpression(compiledExpression, {
           a: 2,
           b: { x: { y: { abc: 10 } } },
           arr: [0, 1, 2],
+          index: 1,
         })
       );
     } catch (e) {

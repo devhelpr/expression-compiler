@@ -467,6 +467,15 @@ export class Compiler {
     }
   };
 
+  binaryExpressionAsString = (expression: any, valType: string) => {
+    const oldCodeScript = this.codeScript;
+    this.codeScript = '';
+    this.binaryExpression(expression, valType);
+    const resultScript = this.codeScript;
+    this.codeScript = oldCodeScript;
+    return resultScript;
+  };
+
   binaryExpression = (expression: any, valType: string) => {
     this.expression(expression.left, valType, true);
 
@@ -524,6 +533,11 @@ export class Compiler {
         expressionNode.property.type === 'Identifier'
       ) {
         this.codeScript += `.${expressionNode.property.name}`;
+      } else if (
+        expressionNode.property &&
+        expressionNode.property.type === 'BinaryExpression'
+      ) {
+        this.codeScript += this.binaryExpression(expressionNode.property, '');
       } else {
         throw new Error(
           `Unsupported property "${expressionNode.property.type}" in MemberExpression`
@@ -534,6 +548,33 @@ export class Compiler {
       expressionNode.object.type === 'Identifier'
     ) {
       if (
+        expressionNode.property &&
+        expressionNode.property.type === 'BinaryExpression'
+      ) {
+        const localVariableIndex = this.localVarablesList.indexOf(
+          expressionNode.object.name
+        );
+        if (localVariableIndex >= 0) {
+          const variableType = this.localVarablesTypeList[localVariableIndex];
+          if (variableType === 'array') {
+            this.codeScript += `local_${localVariableIndex}.at(${this.binaryExpressionAsString(
+              expressionNode.property,
+              ''
+            )})`;
+          } else {
+            throw new Error(
+              'UnaryExpression not supported for non array types'
+            );
+          }
+        } else {
+          // TODO : add to payloadProperties for payload validation
+          const helper = `${this.binaryExpressionAsString(
+            expressionNode.property,
+            ''
+          )}`;
+          this.codeScript += `(Array.isArray(payload.${expressionNode.object.name}) ? payload.${expressionNode.object.name}.at(${helper}) : payload.${expressionNode.object.name}[${helper}])`;
+        }
+      } else if (
         expressionNode.property &&
         expressionNode.property.type === 'UnaryExpression'
       ) {
