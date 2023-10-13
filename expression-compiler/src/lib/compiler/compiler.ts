@@ -571,6 +571,14 @@ export class Compiler {
             expressionNode.property,
             ''
           )}`;
+          const parsedNumber = parseInt(helper);
+          if (isNaN(parsedNumber)) {
+            this.payloadProperties.push(
+              `${expressionNode.object.name}[${helper}]`
+            );
+          } else {
+            this.payloadProperties.push(`${expressionNode.object.name}`);
+          }
           this.codeScript += `(Array.isArray(payload.${expressionNode.object.name}) ? payload.${expressionNode.object.name}.at(${helper}) : payload.${expressionNode.object.name}[${helper}])`;
         }
       } else if (
@@ -598,6 +606,14 @@ export class Compiler {
             expressionNode.property,
             ''
           )}`;
+          const parsedNumber = parseInt(helper);
+          if (isNaN(parsedNumber)) {
+            this.payloadProperties.push(
+              `${expressionNode.object.name}[${helper}]`
+            );
+          } else {
+            this.payloadProperties.push(`${expressionNode.object.name}`);
+          }
           this.codeScript += `(Array.isArray(payload.${expressionNode.object.name}) ? payload.${expressionNode.object.name}.at(${helper}) : payload.${expressionNode.object.name}[${helper}])`;
         }
       } else if (
@@ -622,12 +638,18 @@ export class Compiler {
             this.codeScript += `local_${localVariableIndex}.${expressionNode.property.name}`;
           }
         } else {
-          this.payloadProperties.push(
-            `${expressionNode.object.name}.${expressionNode.property.name}`
-          );
           if (expressionNode.property.name === 'length') {
+            this.payloadProperties.push(`${expressionNode.object.name}`);
             this.codeScript += `payload.${expressionNode.object.name}.${expressionNode.property.name}`;
           } else {
+            const parsedNumber = parseInt(expressionNode.property.name);
+            if (isNaN(parsedNumber)) {
+              this.payloadProperties.push(
+                `${expressionNode.object.name}.${expressionNode.property.name}`
+              );
+            } else {
+              this.payloadProperties.push(`${expressionNode.object.name}`);
+            }
             this.codeScript += `(Array.isArray(payload.${expressionNode.object.name}) ? payload.${expressionNode.object.name}.at(payload.${expressionNode.property.name}) : payload.${expressionNode.object.name}[payload.${expressionNode.property.name}])`;
           }
         }
@@ -643,9 +665,18 @@ export class Compiler {
         } else {
           // TODO : fix this to work with arrays..
 
-          this.payloadProperties.push(
-            `${expressionNode.object.name}.${expressionNode.property.name}`
-          );
+          // this.payloadProperties.push(
+          //   `${expressionNode.object.name}.${expressionNode.property.name}`
+          // );
+
+          const parsedNumber = parseInt(expressionNode.property.value);
+          if (isNaN(parsedNumber)) {
+            this.payloadProperties.push(
+              `${expressionNode.object.name}[${expressionNode.property.value}]`
+            );
+          } else {
+            this.payloadProperties.push(`${expressionNode.object.name}`);
+          }
           this.codeScript += `payload.${expressionNode.object.name}[${expressionNode.property.value}]`;
         }
       } else {
