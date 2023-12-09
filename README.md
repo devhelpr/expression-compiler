@@ -7,7 +7,7 @@ See [readme for expression-compiler npm package](expression-compiler/README.md) 
 
 
 ... manually increase version or .. npm version ...
-yarn nx build @devhelpr/expression-compiler
+npx nx build @devhelpr/expression-compiler
 
 cd dist/expression-compiler
 npm publish --access public
