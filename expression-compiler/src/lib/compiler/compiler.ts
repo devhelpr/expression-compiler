@@ -477,6 +477,7 @@ export class Compiler {
   };
 
   binaryExpression = (expression: any, valType: string) => {
+    this.codeScript += `(`;
     this.expression(expression.left, valType, true);
 
     if (expression.operator === '%' && valType === 'float') {
@@ -514,6 +515,7 @@ export class Compiler {
     }
 
     this.expression(expression.right, valType);
+    this.codeScript += `)`;
   };
 
   memberExpression = (expressionNode: any) => {
