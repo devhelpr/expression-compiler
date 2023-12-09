@@ -38,6 +38,45 @@ describe('ExpressionCompiler', () => {
     expect(result).toBe(9);
   });
 
+  it('should return object key value', () => {
+    const payload = {
+      a: {
+        b: 123,
+      },
+    };
+    const compiledExpression = compileExpression('a.b');
+    const result = runExpression(compiledExpression, payload);
+    expect(result).toBe(123);
+  });
+
+  it('should comapre object key property values', () => {
+    const payload = {
+      a: {
+        b: 123,
+      },
+      c: {
+        d: 456,
+      },
+    };
+    const compiledExpression = compileExpression('a.b < c.d');
+    const result = runExpression(compiledExpression, payload);
+    expect(result).toBe(true);
+  });
+
+  it('should comapre object key property string values', () => {
+    const payload = {
+      a: {
+        b: 'abc',
+      },
+      c: {
+        d: 'def',
+      },
+    };
+    const compiledExpression = compileExpression('a.b < c.d');
+    const result = runExpression(compiledExpression, payload);
+    expect(result).toBe(true);
+  });
+
   it('should return array values', () => {
     const payload = {
       a: [1, 2, 3],

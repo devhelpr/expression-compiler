@@ -643,14 +643,20 @@ export class Compiler {
             this.codeScript += `payload.${expressionNode.object.name}.${expressionNode.property.name}`;
           } else {
             const parsedNumber = parseInt(expressionNode.property.name);
+            let isNumber = true;
             if (isNaN(parsedNumber)) {
+              isNumber = false;
               this.payloadProperties.push(
                 `${expressionNode.object.name}.${expressionNode.property.name}`
               );
             } else {
               this.payloadProperties.push(`${expressionNode.object.name}`);
             }
-            this.codeScript += `(Array.isArray(payload.${expressionNode.object.name}) ? payload.${expressionNode.object.name}.at(payload.${expressionNode.property.name}) : payload.${expressionNode.object.name}[payload.${expressionNode.property.name}])`;
+            if (isNumber) {
+              this.codeScript += `(Array.isArray(payload.${expressionNode.object.name}) ? payload.${expressionNode.object.name}.at(payload.${expressionNode.property.name}) : payload.${expressionNode.object.name}[payload.${expressionNode.property.name}])`;
+            } else {
+              this.codeScript += `(Array.isArray(payload.${expressionNode.object.name}) ? payload.${expressionNode.object.name}.at(payload.${expressionNode.property.name}) : payload.${expressionNode.object.name}.${expressionNode.property.name})`;
+            }
           }
         }
       } else if (

@@ -150,17 +150,23 @@ export function App() {
 
       const compiledExpression = compileExpression(
         //`arr[index] < arr[index + 1]`
-        `arr.length`
+        //`arr.length`
+        'obj1.key == obj2.key'
       );
       console.log('compiledExpression', compiledExpression);
-      setResult(
-        runExpression(compiledExpression, {
-          a: 2,
-          b: { x: { y: { abc: 10 } } },
-          arr: [0, 1, 2, 3],
-          index: 1,
-        })
-      );
+      const exprresult = runExpression(compiledExpression, {
+        a: 2,
+        b: { x: { y: { abc: 10 } } },
+        arr: [0, 1, 2, 3],
+        obj1: {
+          key: 'abc',
+        },
+        obj2: {
+          key: 'abc',
+        },
+        index: 1,
+      });
+      setResult(exprresult);
     } catch (e) {
       setResult(e as unknown as string);
     }
@@ -168,9 +174,9 @@ export function App() {
     // const test = compileExpression(`sum() * 4`);
     // console.log('test', runExpression(test,{}));
     return () => {
-      if (expressionInfo) {
-        deleteExpressionScriptNode(expressionInfo.id);
-      }
+      // if (expressionInfo) {
+      //   deleteExpressionScriptNode(expressionInfo.id);
+      // }
     };
   }, []);
   return (
