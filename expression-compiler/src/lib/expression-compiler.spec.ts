@@ -86,6 +86,26 @@ describe('ExpressionCompiler', () => {
     expect(result).toBe(6);
   });
 
+  it('should return character value by index ', () => {
+    const payload = {
+      a: 'test',
+    };
+    const compiledExpression = compileExpression('a[0]');
+    const result = runExpression(compiledExpression, payload);
+    expect(result).toBe('t');
+  });
+
+  it('should return character value by index in a nested object', () => {
+    const payload = {
+      a: {
+        b: 'test',
+      },
+    };
+    const compiledExpression = compileExpression('a.b[0]');
+    const result = runExpression(compiledExpression, payload);
+    expect(result).toBe('t');
+  });
+
   it('should return last array value', () => {
     const payload = {
       a: [1, 2, 3],

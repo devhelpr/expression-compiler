@@ -151,7 +151,8 @@ export function App() {
       const compiledExpression = compileExpression(
         //`arr[index] < arr[index + 1]`
         //`arr.length`
-        'obj1.key == obj2.key'
+        //'obj1.key == obj2.key'
+        'obj2.key[0]'
       );
       console.log('compiledExpression', compiledExpression);
       const exprresult = runExpression(compiledExpression, {
@@ -164,6 +165,7 @@ export function App() {
         obj2: {
           key: 'abc',
         },
+        test: 'abc',
         index: 1,
       });
       setResult(exprresult);

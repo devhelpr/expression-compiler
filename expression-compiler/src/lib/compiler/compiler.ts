@@ -537,6 +537,11 @@ export class Compiler {
         expressionNode.property.type === 'BinaryExpression'
       ) {
         this.codeScript += this.binaryExpression(expressionNode.property, '');
+      } else if (
+        expressionNode.property &&
+        expressionNode.property.type === 'NumberLiteral'
+      ) {
+        this.codeScript += `[${expressionNode.property.value}]`;
       } else {
         throw new Error(
           `Unsupported property "${expressionNode.property.type}" in MemberExpression`
