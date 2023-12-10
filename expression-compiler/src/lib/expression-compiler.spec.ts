@@ -193,6 +193,19 @@ describe('ExpressionCompiler', () => {
     expect(mock).toBeCalled();
   });
 
+  it('should custom function be called', () => {
+    const mock = vi.fn();
+    registerCustomFunction('customFunction', [], () => {
+      mock();
+      return 2;
+    });
+
+    const compiledExpression = compileExpression('(5 * customFunction())-2');
+    const result = runExpression(compiledExpression, {});
+    expect(mock).toBeCalled();
+    expect(result).toBe(8);
+  });
+
   it('should custom function be called with parameters', () => {
     const mock = vi.fn();
     registerCustomFunction('customFunction', [], (a: number, b: number) => {

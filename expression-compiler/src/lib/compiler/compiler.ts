@@ -279,9 +279,10 @@ export class Compiler {
       }
       case 'CallExpression': {
         this.callExpression(expression);
-        if (!isLeft) {
-          this.codeScript += `;`;
-        }
+        // question : why was this needed?
+        // if (!isLeft) {
+        //   this.codeScript += `;`;
+        // }
         break;
       }
       case 'UnaryExpression':

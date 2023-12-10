@@ -152,7 +152,8 @@ export function App() {
         //`arr[index] < arr[index + 1]`
         //`arr.length`
         //'obj1.key == obj2.key'
-        'obj2.key[0]'
+        //'obj2.key[0]'
+        '(factor - index) * 5'
       );
       console.log('compiledExpression', compiledExpression);
       const exprresult = runExpression(compiledExpression, {
@@ -167,6 +168,7 @@ export function App() {
         },
         test: 'abc',
         index: 1,
+        factor: 5,
       });
       setResult(exprresult);
     } catch (e) {
