@@ -336,4 +336,28 @@ describe('ExpressionCompiler', () => {
       )
     ).toThrowError('Unknown variable test');
   });
+
+  it('should return an array for the expression [2,3,4]', () => {
+    const compiledExpression = compileExpression(' [2,3,4]');
+    expect(compiledExpression).toBeTruthy();
+
+    const result = runExpression(compiledExpression, {});
+    expect(result).toStrictEqual([2, 3, 4]);
+  });
+
+  it('should return an array for the expression [random(),random(),random()]', () => {
+    registerCustomFunction('random', [], () => {
+      return Math.round(Math.random() * 100);
+    });
+    const compiledExpression = compileExpression(
+      '[random(),random(),random()]'
+    );
+    expect(compiledExpression).toBeTruthy();
+
+    const result = runExpression(compiledExpression, {});
+    expect(Array.isArray(result)).toBe(true);
+    result.forEach((element: any) => {
+      expect(typeof element).toBe('number');
+    });
+  });
 });

@@ -14,6 +14,10 @@ registerCustomFunction('customFunction', [], (a, b, c) => {
   console.log('customFunction called', a, b, c);
 });
 
+registerCustomFunction('random', [], (a) => {
+  return Math.round(Math.random() * (a || 100));
+});
+
 registerCustomFunction('sum', [], (payload, a: string) => {
   console.log('sum', payload, a);
   return 3;
@@ -153,7 +157,10 @@ export function App() {
         //`arr.length`
         //'obj1.key == obj2.key'
         //'obj2.key[0]'
-        '(factor - index) * 5'
+        //'(factor - index) * 5'
+        //'[1,2,3,4]'
+        '[random(200),random(500),random(),random()]'
+        //'random()'
       );
       console.log('compiledExpression', compiledExpression);
       const exprresult = runExpression(compiledExpression, {

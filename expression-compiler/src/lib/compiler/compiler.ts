@@ -39,7 +39,7 @@ export class Compiler {
       customBindings[customFunction.functionName] =
         customFunction.customFunction;
     });
-
+    //console.log('ast', ast);
     this.mainProgram(ast);
     //console.log('codeScript', this.codeScript);
     return {
@@ -290,6 +290,9 @@ export class Compiler {
         break;
       case 'FilterStatement':
         this.filterStatement(expression, true);
+        break;
+      case 'BlockHookedExpression':
+        this.blockHookedExpression(expression);
         break;
     }
     return true;
@@ -762,7 +765,7 @@ export class Compiler {
             ) {
               this.localVarablesTypeList.push('array');
               this.localVarablesList.push(variableDeclaration.id.name);
-              console.log('array initializer found', variableDeclaration.init);
+              //console.log('array initializer found', variableDeclaration.init);
               this.codeScript += `let local_${
                 this.localVarablesList.length - 1
               } = [`;
@@ -1110,6 +1113,22 @@ export class Compiler {
 
       this.localVarablesList = stackLocalVarablesList;
       this.localVarablesTypeList = stackLocalVarablesTypeList;
+    }
+  };
+
+  blockHookedExpression = (blockHookedExpressionNode: any) => {
+    if (
+      blockHookedExpressionNode.values &&
+      Array.isArray(blockHookedExpressionNode.values)
+    ) {
+      this.codeScript += `[`;
+      blockHookedExpressionNode.values.map((value: any, index: number) => {
+        if (index > 0) {
+          this.codeScript += `,`;
+        }
+        this.expression(value, '');
+      });
+      this.codeScript += `]`;
     }
   };
 

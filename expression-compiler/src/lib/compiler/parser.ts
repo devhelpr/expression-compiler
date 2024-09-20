@@ -515,7 +515,6 @@ export class Parser {
   };
 
   customBlockStatement = (): IASTCustomBlockNode => {
-    console.log('customBlockStatement');
     const blockName = this._eat('IDENTIFIER').value;
     if (this.customBlocks[blockName]) {
       this._eat('{');
@@ -814,6 +813,8 @@ export class Parser {
       return this.Literal();
     }
     switch (this._lookahead.type) {
+      case '[':
+        return this.BlockHookedExpression();
       case '(':
         return this.ParenthesizedExpression();
       case 'IDENTIFIER': {
@@ -846,6 +847,19 @@ export class Parser {
     const expression = this.Expression();
     this._eat(')');
     return expression;
+  };
+
+  BlockHookedExpression = () => {
+    this._eat('[');
+    const values: any[] = [];
+    do {
+      values.push(this.LogicalORExpression());
+    } while (this._lookahead.type === ',' && this._eat(','));
+    this._eat(']');
+    return {
+      type: 'BlockHookedExpression',
+      values: values,
+    };
   };
 
   Literal = () => {
