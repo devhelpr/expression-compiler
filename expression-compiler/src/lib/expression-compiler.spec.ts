@@ -360,4 +360,13 @@ describe('ExpressionCompiler', () => {
       expect(typeof element).toBe('number');
     });
   });
+
+  it('should return an empty array for the expression []', () => {
+    const compiledExpression = compileExpression('[]');
+    expect(compiledExpression).toBeTruthy();
+
+    const result = runExpression(compiledExpression, {});
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBe(0);
+  });
 });

@@ -159,8 +159,9 @@ export function App() {
         //'obj2.key[0]'
         //'(factor - index) * 5'
         //'[1,2,3,4]'
-        '[random(200),random(500),random(),random()]'
-        //'random()'
+        //'[random(200),random(500),random(),random()]'
+        //'random()',
+        '[]'
       );
       console.log('compiledExpression', compiledExpression);
       const exprresult = runExpression(compiledExpression, {

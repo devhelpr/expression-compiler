@@ -852,9 +852,11 @@ export class Parser {
   BlockHookedExpression = () => {
     this._eat('[');
     const values: any[] = [];
-    do {
-      values.push(this.LogicalORExpression());
-    } while (this._lookahead.type === ',' && this._eat(','));
+    if (this._lookahead.type !== ']') {
+      do {
+        values.push(this.LogicalORExpression());
+      } while (this._lookahead.type === ',' && this._eat(','));
+    }
     this._eat(']');
     return {
       type: 'BlockHookedExpression',
